@@ -1,0 +1,94 @@
+{
+  "commit": "58e56c5ecded8dee1bb5fd4f1e3c447d42993ba6",
+  "generated": "2025-04-12T02:02:21.619Z",
+  "media": [
+    {
+      "__outstatic": {
+        "commit": "",
+        "hash": "0",
+        "path": "public/images/bearbnb.png"
+      },
+      "alt": "",
+      "filename": "bearbnb.png",
+      "publishedAt": "2025-04-12T02:02:06.483Z",
+      "type": "image"
+    },
+    {
+      "__outstatic": {
+        "commit": "58e56c5ecded8dee1bb5fd4f1e3c447d42993ba6",
+        "hash": "104740606",
+        "path": "public/images/billie-holiday-strange-fruit-lp-vinyl-MzMD.jpg"
+      },
+      "alt": "",
+      "filename": "billie-holiday-strange-fruit-lp-vinyl-MzMD.jpg",
+      "publishedAt": "2025-04-12T02:02:21.619Z",
+      "type": "image"
+    },
+    {
+      "__outstatic": {
+        "commit": "",
+        "hash": "0",
+        "path": "public/images/couple-pizza.png"
+      },
+      "alt": "",
+      "filename": "couple-pizza.png",
+      "publishedAt": "2025-04-12T02:02:06.483Z",
+      "type": "image"
+    },
+    {
+      "__outstatic": {
+        "commit": "",
+        "hash": "0",
+        "path": "public/images/flycream-travel.png"
+      },
+      "alt": "",
+      "filename": "flycream-travel.png",
+      "publishedAt": "2025-04-12T02:02:06.483Z",
+      "type": "image"
+    },
+    {
+      "__outstatic": {
+        "commit": "",
+        "hash": "0",
+        "path": "public/images/industrial-pattern.png"
+      },
+      "alt": "",
+      "filename": "industrial-pattern.png",
+      "publishedAt": "2025-04-12T02:02:06.483Z",
+      "type": "image"
+    },
+    {
+      "__outstatic": {
+        "commit": "",
+        "hash": "0",
+        "path": "public/images/jupiter-spaceship.png"
+      },
+      "alt": "",
+      "filename": "jupiter-spaceship.png",
+      "publishedAt": "2025-04-12T02:02:06.483Z",
+      "type": "image"
+    },
+    {
+      "__outstatic": {
+        "commit": "",
+        "hash": "0",
+        "path": "public/images/og-image.png"
+      },
+      "alt": "",
+      "filename": "og-image.png",
+      "publishedAt": "2025-04-12T02:02:06.483Z",
+      "type": "image"
+    },
+    {
+      "__outstatic": {
+        "commit": "",
+        "hash": "0",
+        "path": "public/images/skyline.png"
+      },
+      "alt": "",
+      "filename": "skyline.png",
+      "publishedAt": "2025-04-12T02:02:06.483Z",
+      "type": "image"
+    }
+  ]
+}
