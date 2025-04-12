@@ -1,0 +1,83 @@
+{
+  "commit": "",
+  "generated": "Sat, 12 Apr 2025 02:02:06 GMT",
+  "media": [
+    {
+      "__outstatic": {
+        "commit": "",
+        "hash": "0",
+        "path": "public/images/bearbnb.png"
+      },
+      "alt": "",
+      "filename": "bearbnb.png",
+      "publishedAt": "2025-04-12T02:02:06.483Z",
+      "type": "image"
+    },
+    {
+      "__outstatic": {
+        "commit": "",
+        "hash": "0",
+        "path": "public/images/couple-pizza.png"
+      },
+      "alt": "",
+      "filename": "couple-pizza.png",
+      "publishedAt": "2025-04-12T02:02:06.483Z",
+      "type": "image"
+    },
+    {
+      "__outstatic": {
+        "commit": "",
+        "hash": "0",
+        "path": "public/images/flycream-travel.png"
+      },
+      "alt": "",
+      "filename": "flycream-travel.png",
+      "publishedAt": "2025-04-12T02:02:06.483Z",
+      "type": "image"
+    },
+    {
+      "__outstatic": {
+        "commit": "",
+        "hash": "0",
+        "path": "public/images/industrial-pattern.png"
+      },
+      "alt": "",
+      "filename": "industrial-pattern.png",
+      "publishedAt": "2025-04-12T02:02:06.483Z",
+      "type": "image"
+    },
+    {
+      "__outstatic": {
+        "commit": "",
+        "hash": "0",
+        "path": "public/images/jupiter-spaceship.png"
+      },
+      "alt": "",
+      "filename": "jupiter-spaceship.png",
+      "publishedAt": "2025-04-12T02:02:06.483Z",
+      "type": "image"
+    },
+    {
+      "__outstatic": {
+        "commit": "",
+        "hash": "0",
+        "path": "public/images/og-image.png"
+      },
+      "alt": "",
+      "filename": "og-image.png",
+      "publishedAt": "2025-04-12T02:02:06.483Z",
+      "type": "image"
+    },
+    {
+      "__outstatic": {
+        "commit": "",
+        "hash": "0",
+        "path": "public/images/skyline.png"
+      },
+      "alt": "",
+      "filename": "skyline.png",
+      "publishedAt": "2025-04-12T02:02:06.483Z",
+      "type": "image"
+    }
+  ]
+}
