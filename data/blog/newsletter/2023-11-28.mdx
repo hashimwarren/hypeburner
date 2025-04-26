@@ -1,0 +1,139 @@
+---
+title: "Devtools Weekly #7: AWS Amplify pivots, Sanity revamps pricing, and Vercel loves Jira"
+date: "2023-11-28"
+draft: false
+categories: ["Newsletter"]
+tags: ["aws amplify", "jira", "sanity", "vercel"]
+---
+
+The Thanksgiving holiday didn't slow down the feature releases this week!
+
+
+
+Let's get into it...
+
+
+
+Hot Product Launch
+
+
+
+AWS retooled Amplify "to a code-first DX, allowing developers to succinctly express app requirements like data models, business logic, and authorization rules in TypeScript."
+
+
+
+Also, the new Amplify enables environments to be managed with git branches: 
+
+
+
+
+"all shared environments (such as production, staging, gamma) map 1:1 to Git branches in your repository. New features can be tested in ephemeral environments with pull request previews (or feature branches) before they are merged into production. Unlike the Gen-1 experience, which requires users to configure a number of steps in the CLI or Console to set up a fullstack environment, the Gen-2 experience is zero-config. Because of our code-first approach, the Git repository is always the source of truth for the state of the fullstack app—all backend resources are defined as code for reproducibility and portability across branches."
+
+
+
+
+I personally loved Amplify Console because it made it simply to build and deploy my projects without getting lost in the AWS user interface quagmire. But with this relaunch, it looks like AWS is moving away from Console being the center of Amplify's developer experience, and they now want to enable teams to configure their projects in code, within their projects.
+
+
+
+This means Amplify is no longer fighting for dev hearts and minds against Netlify, Vercel, and Render and their kissable UI's. Instead, they want to win against Terraform, Serverless, and Pulumi where all of the app's infrastructure is built, shared, and versioned in code.
+
+
+
+Read more:
+
+
+
+
+AWS Amplify's next generation announcement
+
+
+
+AWS Amplify Gen 2 docs
+
+
+
+
+Backend Products
+
+
+
+✨ Sanity revamped its pricing scheme, from $99 per project a month to start, to $15 per user a month
+
+
+
+✨ API gateway Grafbase is now monorepo friendly. You can configure any folder in your project as the root.
+
+
+
+✨ New startup Powersync provides a "sync system for apps with SQL backends", which enables "offline-first / local first" apps. And now they've released web support.
+
+
+
+
+
+
+
+Enterprise Watch
+
+
+
+✨ Vercel launched a Jira integration so that "comments on your deployments can now be converted into Jira issues."
+
+
+
+No one loves Jira more than the economic buyer at a large firm. More than anything else Vercel has launched recently, this "small" feature is sure to be included in the Sales team's decks immediately.
+
+
+
+
+
+
+
+Front-End Products
+
+
+
+✨ You can now deploy a Nuxt app to AWS Amplify with zero configuration
+
+
+
+✨ Docusaurus 3.0 launched, bumping it's MDX dependency from v1 to MDX 3.0.
+
+
+
+DevOps Products
+
+
+
+✨ Remember Fig, the command line alternative? Amazon acquired the tool in August, and it looks like they've been hard at work. 
+
+
+
+Fig is now relaunched as Amazon CodeWhisperer for the command line. The upgrade includes "new AI-powered code remediation, IaC support, and integration with Visual Studio"
+
+
+
+
+Amazon CodeWhisperer announcement
+
+
+
+Amazon CodeWhisperer for command line docs
+
+
+
+Amazon acquires Fig's tech, hires team
+
+
+
+
+Events
+
+
+
+Prisma's Discover Data DX - December 7th, virtualAWS re:Invent - Nov 27 - Dec 1st, Las Vegas and virtual
+
+
+
+Need help creating case studies about your best customers? Hit "reply" on this email and let's talk. - Hashim Warren
