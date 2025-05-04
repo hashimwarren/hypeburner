@@ -98,6 +98,7 @@ const siteMetadata = {
     //   indexName: 'docsearch',
     // },
   },
+  contactEmail: 'contact@hypeburner.com',
 }
 
 module.exports = siteMetadata
