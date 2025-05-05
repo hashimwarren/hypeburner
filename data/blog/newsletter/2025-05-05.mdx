@@ -1,0 +1,88 @@
+---
+title: "Stripe's massive iOS opportunity, Langchain's case study sprint, Datadog acquires Eppo, the simple homepage trend, and more"
+date: '2025-05-05'
+tags: ['newsletter', 'stripe', 'langchain', 'datadog', 'eppo', 'planetscale', 'bucket']
+draft: false
+summary: 'A packed week of developer tools business news, including legal judgements, acquisitions, and product launches.'
+images: ['/static/images/twitter-card.png']
+authors: ['default']
+---
+
+## Launch of the Week
+
+This sudden, massive expansion of **Stripe's** TAM is the lead story for you this week.
+
+A judge ruled that Apple has to allow iOS developers to offer payments via the web, without Apple taking a cut. The winner here is Stripe, the leader in payments infrastructure.
+
+I expect the [Stripe Sessions 2025 keynote](https://www.youtube.com/live/AWXAd2GhHrg) to mention new efforts to win iOS developers. But for now we just have an early effort from [Michael Luo, a Stripe PM on X](https://x.com/AzianMike/status/1917830346332332329) evangelizing [a guide](https://docs.stripe.com/mobile/digital-goods) to accepting web-based payments.
+
+But Stripe is not the only payments player rushing to do business with the 2 million app store apps. [**Paddle** released content](https://www.paddle.com/blog/apple-vs-epic-app-store-changes) helping app developers understand the payment models they can now offer to customers with their newfound payment freedom.
+
+## Enterprise Watch 🏆
+
+**Langchain** gets the Enterprise Watch trophy this week. Linda Ye and the team are doing the hard work of answering prospect objections with customer proof.
+
+First, Langchain is targeting the search term “Is Langchain used in production?”. An old Reddit thread ranks \#1 in Google, but [Langchain’s blog post](https://blog.langchain.dev/is-langgraph-used-in-production/) is already \#2.
+
+The blog links to a [new case studies page](https://www.langchain.com/built-with-langgraph). And Langchain is filling it up quickly. They’ve [published 6 case studies](https://blog.langchain.dev/tag/case-studies/) just last month alone\! For comparison, LLamaIndex has only 3 case studies this year, and newcomer Mastra AI hasn’t published a full customer story yet.
+
+## Acquisition
+
+Alex Konrad [had the scoop](https://www.upstartsmedia.com/p/datadog-buys-startup-220-million) \- observability platform **Datadog** acquired experimentation tool **Eppo**.
+
+But before Eppo could even [announce it](https://www.geteppo.com/blog/eppo-is-now-part-of-datadog) today, their blood rival [**Statsig** beat them to the punch](https://www.statsig.com/blog/datadog-acquires-eppo%20) with a thoughtful article about their shared history shaping the experimentation tooling market.
+
+This was a risky move by Statsig CEO **Vijaye Raji**, but I think he pulled it off. The article is genuinely helpful because it gives us behind-the-scenes insight into why Datadog was interested in Eppo, and where the industry is going. So stash Raji’s post as an example of [newsjacking](https://www.newsjacking.com/what-is-newsjacking-newsjacking) done well.
+
+## Talent
+
+Congrats to **Karl Rumelhart**, [Contentful’s new CMO](https://finance.yahoo.com/news/contentful-appoints-karl-rumelhart-chief-130000698.html%20). The press release explains that part of Rumelhart’s job will be positioning and explaining Contentful’s new AI capabilities to the company’s thousands of customers in engineering and marketing. Tough job, and good luck.
+
+## GTM Trends
+
+Minimal website redesigns is this week’s GTM trend for devtools.
+
+**Planetscale** unveiled a sparse, text-based website just months after its [previous redesign](https://www.edgarlr.com/posts/building-planetscale-homepage%20%20). The new paint paid off. Holly Guevara, the VP of Marketing [tweeted](https://x.com/hollylawly/status/1897332070571250144?t=mApnPDw8PTH6kW9ejkUW6g&s=19%20) that the site saw a massive increase in KPI’s:
+
+- Signups — 103% increase
+- Qualified inbound — 57% increase
+- Pageviews — 101% increase
+
+Last week **Bucket,** a feature flagging tool debuted [a markdown inspired new look](https://bucket.co/blog/markdown-website).
+
+![Bucket](/static/images/bucket.png)
+
+I’m clicking around their site and it’s sickeningly fast. Great job over there\!
+
+I predict we’ll see more dev tool websites go text heavy and lightweight, especially as AI Agents become the main consumer of marketing pages.
+
+## Devtool News
+
+✨ **Meilisearch**, the API-first search product, now has “composite indexing” which lets you combine local and remote embedding services in your search config. Meilisearch then “automatically selects the appropriate embedder based on the current operation.”
+
+- [Blog post](https://www.meilisearch.com/blog/meilisearch-1-14)
+
+✨ **Sanity**, the headless CMS, released a local MCP server. What’s great about this new capability is that an AI client can manage content in Sanity, and also analyze it. Sanity explains that your AI tools can identify patterns, gaps, and connections across all your product content.
+
+- [Blog post](https://www.sanity.io/blog/introducing-sanity-model-context-protocol-server)
+- [Video interview with co-founder](https://www.youtube.com/watch?v=W32jJ5WOMXE)
+
+✨ **Knock**, the notification orchestration tool, also released an MCP server. This enables developers (or hey, even marketers) to manage the creation of notification workflows and content using an AI client. Props to my former colleagues on a fantastic new feature\!
+
+- [Blog post](https://knock.app/blog/announcing-agent-toolkit-and-mcp-server)
+- [Video demo](https://youtu.be/SugU8YwdyQU?si=9oXG25gPl-GSw8uT)
+
+✨ **Directus**, the headless CMS, launched visual editing. Honestly, this is a catch- up feature. Here’s how their competitors handle visual editing: [Storyblok](https://www.storyblok.com/docs/concepts/visual-editor), [Sanity](https://www.sanity.io/docs/introduction-to-visual-editing), [Strapi](https://strapi.io/blog/announcing-visual-editing-for-strapi-powered-by-vercel), [TinaCMS](https://tina.io/docs/contextual-editing/overview), and [Contentful Studio](https://www.contentful.com/products/studio/).
+
+- [Blog post](https://directus.io/blog/introducing-visual-editing)
+- [Video](https://www.youtube.com/watch?v=Mz_svF90RFc)
+
+✨ **Neon**, the serverless Postgres platform, released a local way to manage your database. Neon emphasizes that this is not a local Postgres instance which can drift from your production database. Instead it’s a “proxy service that provides a local interface to your Neon cloud database.”
+
+- [Blog post](https://neon.tech/blog/make-yourself-at-home-with-neon-local)
+- [Tweet](https://x.com/neondatabase/status/1917594896061354388?t=dHj5Q4XLnaEBMHQ18mEVag&s=19%20)
+
+✨ **Courier**, the notification orchestration tool, launched a new way to “embed a custom notification editor in your app”.
+
+- [Blog post](https://www.courier.com/blog/courier-create-embed-a-custom-notification-and-email-editor-in-your-app%20%20)
+- [Video demo](https://www.youtube.com/watch?v=SRuXIyhqkNg&t=118s)
