@@ -21,6 +21,7 @@
 - **Styling**
   - Apply **Tailwind utility classes** directly in markup; do **not** propose CSS‑in‑JS or inline styles :contentReference[oaicite:9]{index=9}.
   - Follow core Tailwind breakpoints (`sm md lg xl 2xl`) and spacing scale (`p‑4`, `gap‑6`, etc.).
+  - Blog post body text size (styled with `@tailwindcss/typography`): Modify utility classes (e.g., `prose-lg`, `text-xl`) on the main content `div` within `layouts/PostLayout.tsx`.
 - **Components first**
   - Prefer composition over duplication—reuse or extend components in `components/**`.
 
