@@ -52,7 +52,9 @@ const siteMetadata = {
   newsletter: {
     // supports mailchimp, buttondown, convertkit, klaviyo, revue, emailoctopus, beehive
     // Please add your .env file and modify it according to your selection
-    provider: 'mailchimp',
+    provider: 'resend',
+    resendApiKey: process.env.RESEND_API_KEY,
+    resendAudienceId: process.env.RESEND_AUDIENCE_ID,
   },
   comments: {
     // If you want to use an analytics provider you have to add it to the
