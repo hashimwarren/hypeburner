@@ -1,0 +1,52 @@
+import { NextResponse } from 'next/server'
+import { Resend } from 'resend'
+
+const resend = new Resend('YOUR_RESEND_API_KEY_PLACEHOLDER')
+
+export async function POST(request: Request) {
+  try {
+    const { name, email, message } = await request.json()
+
+    if (!name || !email || !message) {
+      return NextResponse.json({ error: 'Missing required fields.' }, { status: 400 })
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      return NextResponse.json({ error: 'Invalid email format.' }, { status: 400 })
+    }
+
+    const emailHtml = `
+      <div>
+        <h1>New Contact Form Submission</h1>
+        <p><strong>Name:</strong> ${name}</p>
+        <p><strong>Email:</strong> ${email}</p>
+        <p><strong>Message:</strong></p>
+        <p>${message}</p>
+      </div>
+    `
+
+    const { data, error } = await resend.emails.send({
+      from: 'Contact Form <onboarding@resend.dev>',
+      to: 'YOUR_EMAIL_ADDRESS_PLACEHOLDER',
+      subject: 'New Contact Form Submission',
+      html: emailHtml,
+    })
+
+    if (error) {
+      console.error('Error sending email:', error)
+      return NextResponse.json({ error: 'Failed to send email.' }, { status: 500 })
+    }
+
+    return NextResponse.json({ message: 'Email sent successfully!', data }, { status: 200 })
+  } catch (err) {
+    console.error('Error processing request:', err)
+    // Check if err is an instance of Error to safely access err.message
+    const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred.'
+    return NextResponse.json(
+      { error: 'Failed to process request.', details: errorMessage },
+      { status: 500 }
+    )
+  }
+}
