@@ -52,9 +52,7 @@ export default function ContactForm() {
       <Button type="submit" disabled={status === 'sending'}>
         {status === 'sending' ? 'Sending...' : 'Send'}
       </Button>
-      {status === 'sent' && (
-        <p className="text-sm text-green-600">Thanks for reaching out!</p>
-      )}
+      {status === 'sent' && <p className="text-sm text-green-600">Thanks for reaching out!</p>}
       {status === 'error' && (
         <p className="text-sm text-red-600">Something went wrong. Please try again.</p>
       )}
