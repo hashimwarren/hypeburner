@@ -43,34 +43,36 @@ The back and forth highlights a fundamental strategic divide in the database-as-
 
 ## Funding and Acquisitions
 
-**Polar**, the open-source monetization platform, announced a $10M seed round led by Accel with impressive angel investors including Guillermo Rauch (Vercel), Paul Copplestone (Supabase), and Tobi Lütke (Shopify). The company is targeting what they call "one-developer unicorns" - solo builders who need enterprise-grade billing infrastructure.
+**Polar**, he payments platform, announced a $10M seed round led by Accel with impressive angel investors including Guillermo Rauch (Vercel), Paul Copplestone (Supabase), and Tobi Lütke (Shopify). The company is targeting what they call "one-developer unicorns" - solo builders who need enterprise-grade billing infrastructure.
 
-Their thesis is compelling:
-
-> "It's never been easier to build software... It's never been easier to ship and scale software. But, it's never been harder to monetize software."
-
-Polar is betting that the next wave of unicorns will be built by individual developers who need sophisticated billing without the complexity.
+I like this framing because it means Polar will focus on building higher level abstractions than what Stripe offers. This is a trend. I'm seeing more devtools offer outcome focused solutions, while still allowing users to have access to lower level resources.
 
 - [Blog post](https://polar.sh/blog/polar-seed-announcement)
 
-**Browserbase**, the browser infrastructure platform, raised a $40M Series B led by Notable Capital. The company is positioning itself as a primitive for web automation, comparing themselves to foundational companies like Twilio and Stripe. They're also launching Director.ai to make web automation accessible to non-developers, expanding beyond their traditional developer audience.
+**Browserbase**, the browser infrastructure platform, raised a $40M Series B led by Notable Capital. The company is positioning itself as a primitive for web automation, comparing themselves to foundational companies like Twilio and Stripe.
+
+They also launched Director.ai to make web automation accessible to non-developers. Director is to Browserbase what v0 is to Vercel and Nextjs.
+
+I'm genuinely impressed by the new product. I asked it to get the latest posts from Stripe, and it wrote the browser automation code and delivered the results to me. I can see me using this product with Hypeburner for research.
 
 - [Blog post](https://www.browserbase.com/blog/series-b-and-beyond)
 
 ## More Developer Tool News
 
-✨ **Inngest**, the durable workflow platform, launched Realtime in developer preview - a feature that lets you stream updates from functions to users in real-time. The company recognizes that "Realtime updates are now a core requirement for any web application, especially when long-running tasks are involved. The rise of AI patterns such as AI Agents has further emphasized the need for such features."
+✨ **Inngest**, the workflow platform, launched Realtime in developer preview - a feature that lets you stream updates from functions to users in real-time.
 
-What's clever about Inngest's approach is the combination of real-time streaming with their existing `waitForEvent()` feature to enable "Human in the Loop" patterns. This lets AI workflows pause for user confirmation before proceeding - a critical capability as AI agents become more autonomous.
+What's clever about Inngest's approach is the combination of real-time streaming with their existing `waitForEvent()` feature to enable "Human in the Loop" patterns.
+
+Inngest hasn't made an announcement, but I noticed they redesigned their homepage to go all-in on agentic workflows. [See the before/after screenshots](https://www.linkedin.com/posts/hashimwarren_no-special-announcement-but-inngest-is-now-activity-7342997395577733120-n7ir).
 
 - [Blog post](https://www.inngest.com/blog/realtime-human-in-the-loop-ai-workflows)
 
-✨ **Supabase**, the Firebase alternative, released a "Behind The Code" documentary series focusing on the Nuxt.js team. This content marketing play shows how developer tools can create engaging, non-product content that builds community and brand awareness. The documentary format is ambitious and shows Supabase investing heavily in community building beyond just product features.
+✨ **Supabase**, the Postgres database platform, has been producing a documentary series forcused on their customers. This is a clever reframing of doing case studies, and is more interesting for both prospects to watch and key customers to participate in.
 
-- [Video](https://www.youtube.com/watch?v=uvG11I-ftfo)
+- [Nuxt.js - Behind the Code](https://www.youtube.com/watch?v=uvG11I-ftfo)
+- [Lovable - Behind the Code](https://www.youtube.com/watch?v=uvG11I-ftfo)
+- [Bolt - Behind the Code](https://youtu.be/LfAV5fmRybg?si=wKo68jYx66TZrQx5)
 
-✨ **GrowthBook**, the feature flagging and experimentation platform, launched SQL Explorer as part of their launch month. The tool addresses a common frustration: "answering simple data questions meant jumping into separate tools like Looker, Mode, or Tableau—just to write some quick SQL or generate a basic chart." This is smart product expansion - instead of building a full BI platform, they're solving the quick analysis use case that interrupts their core workflow.
-
-GrowthBook's approach of dogfooding their own feature flags for these launches is worth noting - they're not just talking about experimentation, they're living it.
+✨ **GrowthBook**, the feature flagging and experimentation platform, launched SQL Explorer as part of their launch month. This is a restained product strategy. Instead of building a full BI platform, they're solving small use case while maintaining a good product experience.
 
 - [Blog post](https://blog.growthbook.io/growthbook-launch-month-week-3/)
