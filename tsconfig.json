@@ -16,6 +16,7 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "baseUrl": ".",
+    "types": ["jest", "@testing-library/jest-dom"],
     "paths": {
       "@/components/*": ["components/*"],
       "@/data/*": ["data/*"],
