@@ -57,10 +57,9 @@ const securityHeaders = [
 const output = process.env.EXPORT ? 'export' : undefined
 const basePath = process.env.BASE_PATH || undefined
 const unoptimized = process.env.UNOPTIMIZED ? true : undefined
-n// Security: Environment variables are handled securely.
+// Security: Environment variables are handled securely.
 // Only NEXT_PUBLIC_* variables are exposed to the client.
 // Server-side variables like API keys remain server-only.
-
 
 /**
  * @type {import('next/dist/next-server/server/config').NextConfig}

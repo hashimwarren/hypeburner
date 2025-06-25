@@ -94,6 +94,10 @@
 
 - Run `pnpm run lint` before every commit (`eslint --max-warnings 0`).
 - Use `pnpm run test` (Vitest) for unit tests; snapshots belong in `__snapshots__/`.
+- **Playwright E2E tests**: Use `npx playwright test` for browser testing. Tests live in `__tests__/*.spec.ts`.
+  - Contact form test: `__tests__/contact-form.spec.ts` validates form submission flow.
+  - Start dev server (`yarn dev`) before running Playwright tests.
+  - Tests use element IDs (`#name`, `#email`, `#message`) for reliable selectors.
 - CI workflow blocks merge on failing tests or ESLint errors.
 
 ## ──────────────────────────────────
