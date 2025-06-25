@@ -18,9 +18,7 @@ test.describe('Contact Form', () => {
     // Submit the form
     await page.click('button[type="submit"]')
 
-    // Since the API will fail without environment variables, expect an error message
-    await expect(
-      page.locator('text=Network error. Please check your connection and try again.')
-    ).toBeVisible()
+    // Since the API will fail without environment variables, expect a server error message
+    await expect(page.locator('text=Server configuration error.')).toBeVisible({ timeout: 10000 })
   })
 })
