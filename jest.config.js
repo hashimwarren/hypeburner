@@ -9,12 +9,21 @@ const createJestConfig = nextJest({
 const customJestConfig = {
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   testEnvironment: 'jsdom',
-  testPathIgnorePatterns: ['<rootDir>/.next/', '<rootDir>/node_modules/'],
+  testPathIgnorePatterns: [
+    '<rootDir>/.next/',
+    '<rootDir>/node_modules/',
+    '<rootDir>/__tests__/.*\\.spec\\.(js|ts)', // Exclude Playwright spec files
+  ],
+  testMatch: [
+    '**/__tests__/**/*.(test|spec).(js|jsx|ts|tsx)',
+    '!**/__tests__/**/*.spec.(js|ts)', // Exclude .spec files (Playwright)
+  ],
   moduleNameMapper: {
     '^@/components/(.*)$': '<rootDir>/components/$1',
     '^@/layouts/(.*)$': '<rootDir>/layouts/$1',
     '^@/data/(.*)$': '<rootDir>/data/$1',
     '^@/css/(.*)$': '<rootDir>/css/$1',
+    '^@/app/(.*)$': '<rootDir>/app/$1',
   },
   transform: {
     '^.+\\.(js|jsx|ts|tsx)$': ['babel-jest', { presets: ['next/babel'] }],
