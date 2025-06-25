@@ -1,0 +1,236 @@
+'use client'
+
+import { useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+
+// Validation schema using Zod
+const contactSchema = z.object({
+  name: z.string().min(1, 'Name is required').min(2, 'Name must be at least 2 characters'),
+  email: z.string().min(1, 'Email is required').email('Please enter a valid email address'),
+  type: z.string().min(1, 'Subject is required').min(5, 'Subject must be at least 5 characters'),
+  message: z
+    .string()
+    .min(1, 'Message is required')
+    .min(10, 'Message must be at least 10 characters'),
+})
+
+type ContactFormData = z.infer<typeof contactSchema>
+
+export default function ContactForm() {
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitMessage, setSubmitMessage] = useState('')
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<ContactFormData>({
+    resolver: zodResolver(contactSchema),
+  })
+
+  const onSubmit = async (data: ContactFormData) => {
+    setIsSubmitting(true)
+    setSubmitMessage('')
+
+    try {
+      // Simulate API call - replace with actual endpoint
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to send message')
+      }
+
+      // Success - show success message and clear form
+      setSubmitMessage("Thank you for your message! We'll get back to you soon.")
+      reset()
+    } catch (error) {
+      // Error - show descriptive error message
+      if (error instanceof Error) {
+        setSubmitMessage(error.message)
+      } else {
+        setSubmitMessage('Something went wrong. Please try again later.')
+      }
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  return (
+    <div className="mx-auto max-w-2xl">
+      <div className="rounded-lg bg-white p-8 shadow-lg dark:bg-gray-800">
+        <h2 className="mb-6 text-2xl font-bold text-gray-900 dark:text-white">Get in Touch</h2>
+
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          {/* Name Field */}
+          <div>
+            <label
+              htmlFor="name"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
+              Name *
+            </label>
+            <input
+              {...register('name')}
+              type="text"
+              id="name"
+              className={`mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none sm:text-sm ${
+                errors.name
+                  ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                  : 'border-gray-300 focus:border-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white'
+              }`}
+              placeholder="Your full name"
+              aria-invalid={errors.name ? 'true' : 'false'}
+            />
+            {errors.name && (
+              <p className="mt-1 text-sm text-red-600 dark:text-red-400" role="alert">
+                {errors.name.message}
+              </p>
+            )}
+          </div>
+
+          {/* Email Field */}
+          <div>
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
+              Email *
+            </label>
+            <input
+              {...register('email')}
+              type="email"
+              id="email"
+              className={`mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none sm:text-sm ${
+                errors.email
+                  ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                  : 'border-gray-300 focus:border-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white'
+              }`}
+              placeholder="your.email@example.com"
+              aria-invalid={errors.email ? 'true' : 'false'}
+            />
+            {errors.email && (
+              <p className="mt-1 text-sm text-red-600 dark:text-red-400" role="alert">
+                {errors.email.message}
+              </p>
+            )}
+          </div>
+
+          {/* Subject Field */}
+          <div>
+            <label
+              htmlFor="type"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
+              Subject *
+            </label>
+            <input
+              {...register('type')}
+              type="text"
+              id="type"
+              className={`mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none sm:text-sm ${
+                errors.type
+                  ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                  : 'border-gray-300 focus:border-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white'
+              }`}
+              placeholder="What's this about?"
+              aria-invalid={errors.type ? 'true' : 'false'}
+            />
+            {errors.type && (
+              <p className="mt-1 text-sm text-red-600 dark:text-red-400" role="alert">
+                {errors.type.message}
+              </p>
+            )}
+          </div>
+
+          {/* Message Field */}
+          <div>
+            <label
+              htmlFor="message"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
+              Message *
+            </label>
+            <textarea
+              {...register('message')}
+              id="message"
+              rows={5}
+              className={`mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none sm:text-sm ${
+                errors.message
+                  ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                  : 'border-gray-300 focus:border-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white'
+              }`}
+              placeholder="Tell us more about your inquiry..."
+              aria-invalid={errors.message ? 'true' : 'false'}
+            />
+            {errors.message && (
+              <p className="mt-1 text-sm text-red-600 dark:text-red-400" role="alert">
+                {errors.message.message}
+              </p>
+            )}
+          </div>
+
+          {/* Submit Button */}
+          <div>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className={`w-full rounded-md px-4 py-2 text-sm font-medium text-white shadow-sm focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 ${
+                isSubmitting
+                  ? 'bg-gray-400 hover:bg-gray-400'
+                  : 'bg-blue-600 hover:bg-blue-700 active:bg-blue-800'
+              }`}
+            >
+              {isSubmitting ? (
+                <span className="flex items-center justify-center">
+                  <svg className="mr-2 h-4 w-4 animate-spin" viewBox="0 0 24 24">
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                      fill="none"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    />
+                  </svg>
+                  Sending...
+                </span>
+              ) : (
+                'Send Message'
+              )}
+            </button>
+          </div>
+
+          {/* Success/Error Message */}
+          {submitMessage && (
+            <div
+              className={`rounded-md p-4 ${
+                submitMessage.includes('Thank you')
+                  ? 'bg-green-50 text-green-800 dark:bg-green-900/20 dark:text-green-400'
+                  : 'bg-red-50 text-red-800 dark:bg-red-900/20 dark:text-red-400'
+              }`}
+            >
+              <p className="text-sm">{submitMessage}</p>
+            </div>
+          )}
+        </form>
+      </div>
+    </div>
+  )
+}

@@ -2,9 +2,9 @@
   "bun": 1,
   "firebase": 1,
   "heroku": 4,
-  "neon": 9,
+  "neon": 10,
   "netlify": 5,
-  "planetscale": 4,
+  "planetscale": 5,
   "pulumi": 2,
   "sitecore": 1,
   "stellate": 1,
@@ -16,7 +16,7 @@
   "nile": 1,
   "remix": 1,
   "sanity": 3,
-  "supabase": 6,
+  "supabase": 7,
   "vite": 2,
   "angular": 1,
   "cypress": 1,
@@ -83,5 +83,10 @@
   "postman": 1,
   "cloudinary": 1,
   "privy": 1,
-  "cursor": 1
+  "cursor": 1,
+  "liveblocks": 1,
+  "polar": 1,
+  "browserbase": 1,
+  "inngest": 1,
+  "growthbook": 1
 }
