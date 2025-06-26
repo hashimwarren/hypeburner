@@ -88,5 +88,8 @@
   "bun": 1,
   "firebase": 1,
   "sitecore": 1,
-  "stellate": 1
+  "stellate": 1,
+  "test": 2,
+  "dummy": 2,
+  "example": 2
 }
