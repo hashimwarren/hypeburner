@@ -53,3 +53,10 @@ yarn-error.log*
 # Contentlayer
 .contentlayer
 .env*.local
+
+# next-video
+data/videos/*
+!data/videos/*.json
+!data/videos/*.js
+!data/videos/*.ts
+public/_next-video
