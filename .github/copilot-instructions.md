@@ -39,7 +39,28 @@
 
 ## ──────────────────────────────────
 
-## 3. MDX helpers & Pliny modules
+## 3. Live Content & Livestreams
+
+## ──────────────────────────────────
+
+- **Purpose**: To provide a dedicated layout for live-streamed events, based on the provided wireframe.
+- **Design**:
+  - Main headline (`title` from front matter).
+  - Embedded Mux video player.
+  - "Send question" button for user interaction.
+- **Routing & Content**:
+  - Live content will use the `/live/[slug]` route.
+  - Content will be MDX files in `data/live/*.mdx`.
+  - A new `LiveEvent` document type is required in `contentlayer.config.ts`.
+  - **Front-matter**: Must include `title`, `date`, `summary`, and `muxPlaybackId`.
+- **Implementation**:
+  - Create a new layout component: `layouts/LiveLayout.tsx`.
+  - Use `@mux/mux-player-react` for the video, passing the `muxPlaybackId`.
+  - The "Send question" feature will be a client component (`"use client"`) that posts to a new API route (`/api/live/question`).
+
+## ──────────────────────────────────
+
+## 4. MDX helpers & Pliny modules
 
 ## ──────────────────────────────────
 
@@ -52,32 +73,43 @@
   | Command palette | `components/CommandPalette` | Add new routes to `searchData.json`. |
   | SEO | `<PlinySEO … />` | **Never** insert `<Head>` manually. |
   | Comments | `<Comments />` | Provider chosen via `siteMetadata.comments.provider`. |
-  | Newsletter | `<NewsletterForm />` | Calls `POST /api/newsletter`; no third‑party SDKs. |
+  | Newsletter | `<NewsletterForm />` | Calls `POST /api/newsletter`; no third-party SDKs. |
 
 ## ──────────────────────────────────
 
-## 4. Images & media
+## 5. Images & media
 
 ## ──────────────────────────────────
 
 - Always use **`next/image`**. Supply explicit `width` and `height` to unlock Next.js optimisation :contentReference[oaicite:12]{index=12}.
+- **Video (local files)**: Use the `<Video>` component from `next-video`. Store video files in `data/videos/` and import them using a `/videos/` path prefix.
+
+  ```jsx
+  import Video from 'next-video'
+  import getStarted from '/videos/get-started.mp4'
+
+  export default function Page() {
+    return <Video src={getStarted} />
+  }
+  ```
+
 - Remote images: add domains in `next.config.js > images.domains` :contentReference[oaicite:13]{index=13}.
 - Lazy‑loading is automatic; don’t add `loading="lazy"` yourself :contentReference[oaicite:14]{index=14}.
 
 ## ──────────────────────────────────
 
-## 5. Environment variables
+## 6. Environment variables
 
 ## ──────────────────────────────────
 
-- Reference keys from `.env.example`; do not hard‑code secrets :contentReference[oaicite:15]{index=15}.
+- Reference keys from `.env.example`; do not hard-code secrets :contentReference[oaicite:15]{index=15}.
 - Public keys must start with `NEXT_PUBLIC_`.
 - Use Vercel project settings for each _Development / Preview / Production_ env :contentReference[oaicite:16]{index=16}.
 - Access with `process.env.<VAR>` inside server components or route handlers.
 
 ## ──────────────────────────────────
 
-## 6. Build, deploy & optimisation
+## 7. Build, deploy & optimisation
 
 ## ──────────────────────────────────
 
@@ -88,7 +120,7 @@
 
 ## ──────────────────────────────────
 
-## 7. Testing, linting & CI
+## 8. Testing, linting & CI
 
 ## ──────────────────────────────────
 
@@ -102,7 +134,7 @@
 
 ## ──────────────────────────────────
 
-## 8. Commit & PR etiquette
+## 9. Commit & PR etiquette
 
 ## ──────────────────────────────────
 
@@ -112,7 +144,7 @@
 
 ## ──────────────────────────────────
 
-## 9. Copilot prompting tips (meta)
+## 10. Copilot prompting tips (meta)
 
 ## ──────────────────────────────────
 
@@ -120,4 +152,4 @@
 2. **Constrain scope** – specify language (TypeScript), folder, and framework nuances.
 3. **Iterate** – adjust this instructions file whenever conventions change and reload Copilot (`⌘ K ⇧ S` in VS Code).
 
-# End of instructions
+# End
