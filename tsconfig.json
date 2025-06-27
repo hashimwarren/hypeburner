@@ -33,6 +33,7 @@
     "strictNullChecks": true
   },
   "include": [
+    "video.d.ts",
     "next-env.d.ts",
     "**/*.js",
     "**/*.mjs",

@@ -109,6 +109,7 @@ export const Blog = defineDocumentType(() => ({
     layout: { type: 'string' },
     bibliography: { type: 'string' },
     canonicalUrl: { type: 'string' },
+    videoSrc: { type: 'string' },
   },
   computedFields: {
     ...computedFields,
@@ -147,9 +148,47 @@ export const Authors = defineDocumentType(() => ({
   computedFields,
 }))
 
+const videoComputedFields: ComputedFields = {
+  slug: {
+    type: 'string',
+    resolve: (doc) => doc._raw.flattenedPath.replace(/^.+?(\/)/, ''),
+  },
+  path: {
+    type: 'string',
+    resolve: (doc) => doc._raw.flattenedPath,
+  },
+  filePath: {
+    type: 'string',
+    resolve: (doc) => doc._raw.sourceFilePath,
+  },
+}
+
+export const Videos = defineDocumentType(() => ({
+  name: 'Videos',
+  filePathPattern: 'videos/**/*.mp4.json',
+  contentType: 'data',
+  fields: {
+    provider: { type: 'string' },
+    status: { type: 'string' },
+    updatedAt: { type: 'number' },
+    poster: { type: 'string' },
+    blurDataURL: { type: 'string' },
+    playbackId: {
+      type: 'string',
+      resolve: (doc) => doc.providerMetadata.mux.playbackId,
+    },
+    originalFilePath: { type: 'string' },
+    providerMetadata: { type: 'json' },
+    createdAt: { type: 'number' },
+    size: { type: 'number' },
+    sources: { type: 'json' },
+  },
+  computedFields: videoComputedFields,
+}))
+
 export default makeSource({
   contentDirPath: 'data',
-  documentTypes: [Blog, Authors],
+  documentTypes: [Blog, Authors, Videos],
   mdx: {
     cwd: process.cwd(),
     remarkPlugins: [
