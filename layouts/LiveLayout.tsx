@@ -56,7 +56,7 @@ export default function LiveLayout({ content, authorDetails, next, prev, childre
               {videoSrc && (
                 <div className="pt-10 pb-8">
                   <div className="aspect-video w-full overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800">
-                    <Video src={`/videos/${videoSrc}.mp4`} className="h-full w-full object-cover" />
+                    <Video src={videoSrc} className="h-full w-full object-cover" />
                   </div>
                 </div>
               )}
