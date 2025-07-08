@@ -78,10 +78,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         */}
       </head>
       <body className="bg-white text-black antialiased dark:bg-gray-950 dark:text-white">
-        {/* Stagewise Toolbar only in development mode, now as a client component */}
-        {process.env.NODE_ENV === 'development' && (
-          <>{require('@/components/StagewiseToolbarClient').default()}</>
-        )}
         <ThemeProviders>
           <Analytics analyticsConfig={siteMetadata.analytics as AnalyticsConfig} />
           <SectionContainer>

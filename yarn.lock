@@ -2700,30 +2700,6 @@
   dependencies:
     "@sinonjs/commons" "^3.0.0"
 
-"@stagewise-plugins/react@^0.4.9":
-  version "0.4.9"
-  resolved "https://registry.yarnpkg.com/@stagewise-plugins/react/-/react-0.4.9.tgz#1e62f48c6d8515b674b85be3d5e67997f0cf25b0"
-  integrity sha512-njlmHe92sAAvEGPeeyZS+a+twuVBNNaEmjFuUGs02WWnG20HquoXMHRgdUFH5Ecr0cxHS2SP/AbKq/kYEFwMjA==
-
-"@stagewise/toolbar-next@^0.4.9":
-  version "0.4.9"
-  resolved "https://registry.yarnpkg.com/@stagewise/toolbar-next/-/toolbar-next-0.4.9.tgz#d0d1b8bed8d616b4b0c4882624e4829b1e4e4ef9"
-  integrity sha512-E26F+3Spo6ATUpwcX0/U6AlBMEyTGpoY553UVPVb+7JgiQC+6YtQoJkbnmM08x1153ILii7bNUMI4O34ACD+Mg==
-  dependencies:
-    "@stagewise/toolbar-react" "0.4.9"
-
-"@stagewise/toolbar-react@0.4.9":
-  version "0.4.9"
-  resolved "https://registry.yarnpkg.com/@stagewise/toolbar-react/-/toolbar-react-0.4.9.tgz#348b263be0418d5f1da95e0d7718e4c9de5f7821"
-  integrity sha512-K27i8GT20EWQJTmY+XQTvgiZh4EDq83W82zSUdSF7Fo8v9ogypn+wZbyFlLg97F2OYysc0uhILwUlS5eVItpyQ==
-  dependencies:
-    "@stagewise/toolbar" "0.4.9"
-
-"@stagewise/toolbar@0.4.9", "@stagewise/toolbar@^0.4.9":
-  version "0.4.9"
-  resolved "https://registry.yarnpkg.com/@stagewise/toolbar/-/toolbar-0.4.9.tgz#c1f4d5eaa5551c1236395a7285c0212f58c00d4b"
-  integrity sha512-fBggX+4nLwRDHnevWk32BjpMpc6vjF2k9mdamsPqAUnbsKbJnkTCjm0o8DOKcjRO9M/PGwcED4Ct0AWHQvkR/Q==
-
 "@standard-schema/utils@^0.3.0":
   version "0.3.0"
   resolved "https://registry.npmjs.org/@standard-schema/utils/-/utils-0.3.0.tgz"
