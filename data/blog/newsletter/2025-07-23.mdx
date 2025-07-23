@@ -1,9 +1,9 @@
 ---
 title: 'Paddle raises $25M, GrowthBook 4.0 ships, and MCP servers are everywhere'
 date: '2025-07-23'
-summary: 'GrowthBook launches v4.0, Paddle raises $25M, and MCP servers are the new API.'
+summary: 'GrowthBook evolves into a full experimentation platform, Paddle bets big on web monetization with $25M funding, and MCP servers become the new standard for AI tool integration.'
 images: ['/images/twitter-card.png']
-tags: [growthbook, paddle, mcp, mux, zitadel, stytch, imgix, algolia, cloudinary]
+tags: [growthbook, paddle, mcp, cloudinary, mux, zitadel, stytch, imgix, algolia, netlify]
 draft: false
 ---
 
@@ -11,56 +11,56 @@ draft: false
 
 **GrowthBook**, the feature flagging platform, launched version 4.0 with a massive array of new features that basically turns it into a full experimentation and insights platform. The standout addition is their SQL Explorer—a lightweight BI tool that lets you explore data directly within GrowthBook without switching to Looker or similar platforms.
 
-What makes this launch impressive is the restraint. Instead of trying to become a full BI platform, GrowthBook is solving specific use cases while maintaining their core product experience. The new Insights section includes a searchable knowledge base of experiments, metric correlations, and an experiment timeline that shows overlapping tests. This is exactly how you evolve a developer tool—by adding meaningful functionality that doesn't bloat the core experience.
-
 Also notable: GrowthBook shipped their own **MCP server** for AI tools like Cursor. The trend of every developer tool getting an MCP server continues.
 
-- [GrowthBook 4.0 announcement](https://blog.growthbook.io/growthbook-version-4-0/)
+- [Blog post](https://blog.growthbook.io/growthbook-version-4-0/)
 
 ## Enterprise Watch 🏆
 
-**Paddle**, the Merchant of Record platform, gets the trophy this week for raising $25M and making some aggressive expansion moves. The company opened a new Austin office and hired heavy-hitting executives from Shopify, ServiceNow, and Intercom.
+**Cloudinary**, the image and video management platform, gets the trophy this week for announcing availability on AWS Marketplace.
 
-What's interesting about Paddle's timing is their bet on web monetization for consumer apps. With Apple's recent policy changes in the U.S. and EU allowing app developers to redirect users to web payments, Paddle is positioned to capture that shift. They're seeing a "huge increase" in consumer app businesses choosing them for web monetization.
+It's a little strange though, because the company listed itself as in the "AI Agents and Tools" category.
 
-The $25M raise brings Paddle's total funding to over $300M. For a payments infrastructure company, that's either really expensive to build or really profitable to operate at scale.
+In any case, the benefit of being on the marketplace isn't discovery, but the ability for customers to purchase and manage Cloudinary services directly through AWS.
 
-- [Funding announcement](https://www.paddle.com/blog/paddle-raises-25m)
+- [AWS Marketplace announcement](https://cloudinary.com/blog/cloudinary-aws-marketplace-ai-agents-and-tools)
 
 ## Funding and Acquisitions
 
-No major acquisitions this week, but funding activity was solid. Beyond Paddle's $25M, the broader trend seems to be infrastructure companies doubling down on AI-native workflows and developer experience improvements.
+**Paddle**, the Merchant of Record platform, raised $25M and made some aggressive expansion moves. The company opened a new Austin office and hired heavy-hitting executives from Shopify, ServiceNow, and Intercom.
 
-The MCP server trend is particularly interesting—both **Stytch** and **GrowthBook** launched MCP servers this week, joining a growing list of developer tools making themselves available to AI agents. This feels like the new "API-first" for developer tools.
+What's interesting about Paddle's timing is their bet on web monetization for consumer apps. With Apple's recent policy changes in the U.S. and EU allowing app developers to redirect users to web payments, Paddle is fighting to win those new potention customers.
+
+Paddle wrote, "We are seeing a huge increase in the number of consumer app businesses choosing Paddle to manage their web monetization".
+
+- [Funding announcement](https://www.paddle.com/blog/paddle-raises-25m)
 
 ## GTM Trends
 
-**Mux** made the biggest pricing move of the week, announcing their "biggest price drop in history"—20% reduction across encoding, storage, and delivery. What's smart about this announcement is how they framed it around infrastructure improvements rather than just competitive pressure.
+**Mux**, the video hosting service, announced their "biggest price drop in history" with a 20% reduction across encoding, storage, and delivery. What's smart about this announcement is how they framed it around infrastructure improvements rather than just competitive pressure.
 
-Mux's approach to cold storage is clever too—they eliminated the performance penalty and made it default for everyone. Now all assets, including static renditions, automatically move to cheaper storage tiers. This kind of automatic optimization removes a pricing decision from customers entirely.
+In the past a startup wouldn't have seen a need to explain a price drop. But now that customers are worrried about the business sustainability of their vendors, it's a good idea to make the reasoning for a price drop clear.
 
-The move to make static renditions a paid add-on for all quality levels is bold but makes sense. 90% of Mux customers don't use MP4s, so unbundling this feature lets them reduce core pricing for the majority while offering competitive pricing for those who need it.
-
-- [Price drop announcement](https://www.mux.com/blog/price-drop)
+- [Blog post](https://www.mux.com/blog/price-drop)
 
 ## More Developer Tool News
 
-✨ **Zitadel** launched an OIDC Playground for testing authentication flows. This is the kind of developer experience investment that seems small but makes a huge difference in adoption. Nothing worse than debugging OAuth flows in production.
+✨ **Zitadel**, the identity management platform, launched a playground for testing authentication flows. This is the kind of developer experience investment that seems small but removes friction from product adoption.
 
-- [OIDC Playground announcement](https://zitadel.com/blog/zitadel-oidc-playground)
+- [Blog post](https://zitadel.com/blog/zitadel-oidc-playground)
 
-✨ **Stytch**'s MCP server lets AI agents build enterprise authentication flows directly from tools like Cursor. The demo showed an agent setting up a complete React app with Stytch auth without any dashboard clicking. This is what "AI-native" developer tools should feel like.
+✨ **Stytch**, the authentication infrastructure provider, released an MCP server that lets AI agents build enterprise authentication flows directly from tools like Cursor. The demo showed an agent setting up a complete React app with Stytch auth without any dashboard clicking.
 
-- [MCP server blog post](https://stytch.com/blog/stytch-mcp-server/)
+- [Blog post](https://stytch.com/blog/stytch-mcp-server/)
 
-✨ **Imgix** shipped new image optimization features, continuing their steady cadence of improvements. In a crowded image optimization space, consistent execution wins over flashy announcements.
+✨ **Imgix**, the image optimization and delivery service, shipped an AI-Powered creative suite that product and marketing team members can use. The demo images look impressive. But the biggest barrier for Imgix will be changing their positioning from a developer tool to a product that marketers can use without a developer.
 
-- [Image optimization updates](https://www.imgix.com/blog/7125)
+- [Blog post](https://www.imgix.com/blog/7125)
 
-✨ **Algolia** made it into Gartner's Magic Quadrant for Search and Product Discovery. For a company that's been fighting perception battles against newer search solutions, this kind of analyst recognition matters for enterprise sales.
+✨ **Algolia**, the search and discovery platform, made it into Gartner's Magic Quadrant for Search and Product Discovery.
 
-- [Gartner Magic Quadrant announcement](https://www.algolia.com/blog/algolia/2025-gartner-magic-quadrant-for-search-and-product-discovery)
+- [Blog post](https://www.algolia.com/blog/algolia/2025-gartner-magic-quadrant-for-search-and-product-discovery)
 
-✨ **Cloudinary** announced availability on AWS Marketplace with AI agents and tools integration. The move to marketplaces continues to be a smart distribution strategy for developer infrastructure companies.
+✨ Matt Biilmann, the co-founder of **Netlify**, the web development platform, published examples of "Agent Experience (AX)" in action with concrete examples from Clerk, Prisma, Linear, and HubSpot.
 
-- [AWS Marketplace announcement](https://cloudinary.com/blog/cloudinary-aws-marketplace-ai-agents-and-tools)
+- [Blog post](https://biilmann.blog/articles/ax-in-practice/)
