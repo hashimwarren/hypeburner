@@ -1,0 +1,34 @@
+---
+title: "Zed's $32M Series B and pivot to DeltaDB, a GitHub Competitor"
+date: '2025-08-25'
+summary: 'Zed raises $32M to develop DeltaDB, a next-gen version control system designed for real-time collaboration and AI integration.'
+images: ['/images/twitter-card.png']
+tags: [zed, deltadb, github, sequoia, funding]
+draft: false
+---
+
+It looks like Zed, the AI-assisted code editor, just pivoted to compete with GitHub. They [raised \$32M in a Series B](https://zed.dev/blog/sequoia-backs-zed) led by Sequoia Capital, bringing their total funding to $42M.
+
+They also announced work on DeltaDB, a version control system that tracks every single edit, not just commits.
+
+## A good time for a pivot
+
+A commercial code editor is a dead end as a standalone business. VS Code is a loss leader. Cursor announced [a CLI-based agent](https://forum.cursor.com/t/cursor-cli-beta-available-now/126964). And Windsurf got [acquired by an agent company](https://windsurf.com/blog/windsurfs-next-chapter).
+
+Sequoia puts it perfectly:
+
+> “Coders are even questioning whether IDEs will matter in the future.
+
+> When others are zigging, Zed is choosing to zag. They have a deeply held conviction that the IDE will have some important role to play in the future of coding, and that the only way to build that future is from the ground up, with the newest technology that is architected for speed and collaboration.”
+
+## The problem DeltaDB solves
+
+Here's how Zed describes DeltaDB:
+
+> “DeltaDB uses CRDTs to incrementally record and synchronize changes as they happen. It's designed to interoperate with Git, but its operation-based design supports real-time interactions that aren't supported by Git's snapshots. For async interactions, fine-grained change tracking also enables character-level permalinks that survive any code transformation, so we can anchor our interactions to arbitrary locations in the codebase, not just to snapshots of recently-changed code.”
+
+DeltaDB would also track discussions and decisions connected to code, which AI agents could reference for context.
+
+This would solve a problem Sean Grove of OpenAI [presented at the AI Engineer World’s Fair](https://www.youtube.com/watch?v=8rABwKRsec4). Grove said that the evolving specs and prompts used to generate code need a system for tracking and collaboration.
+
+Zed and DeltaDB look to be the answer.
