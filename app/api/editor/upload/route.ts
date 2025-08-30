@@ -49,8 +49,11 @@ export async function POST(request: Request) {
       await fs.stat(outPath)
       name = `${toSlug(base)}-${counter++}${ext}`
       outPath = path.join(baseDir, name)
-    } catch {
-      break
+    } catch (err) {
+      if (err.code === 'ENOENT') {
+        break // File doesn't exist, we're good.
+      }
+      throw err // Another error occurred, rethrow.
     }
   }
 
