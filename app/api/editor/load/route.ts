@@ -10,7 +10,7 @@ export async function GET(request: Request) {
   const slug = searchParams.get('slug') || ''
   if (!slug) return NextResponse.json({ error: 'Missing slug' }, { status: 400 })
 
-  const doc = allBlogs.find((b) => b.slug === slug)
+  const doc = allBlogs.find((b) => b.type === 'Blog' && b.slug === slug)
   if (!doc) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
   const path = (doc as { path?: string }).path
