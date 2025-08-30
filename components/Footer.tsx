@@ -7,7 +7,7 @@ export default function Footer() {
     <footer>
       <div className="mt-16 flex flex-col items-center">
         {/* TODO: Add social media links when profiles are ready */}
-        {/* 
+        {/*
         <div className="mb-3 flex space-x-4">
           {siteMetadata.twitter && (
             <SocialIcon kind="twitter" href={siteMetadata.twitter} size={6} />

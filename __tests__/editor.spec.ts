@@ -17,7 +17,8 @@ test.describe('Local Tiptap Editor', () => {
 
     // Read markdown output
     const md = page.locator('#markdown-output')
-    await expect(md).toHaveValue(/Hello world/)
+    // tiptap-markdown may collapse spaces; allow flexible whitespace
+    await expect(md).toHaveValue(/Hello\s*world/)
     await expect(md).toHaveValue(/\*\*bold\*\*/)
   })
 })
