@@ -58,12 +58,8 @@ export async function POST(req: Request) {
   const mdx = fmLines.join('\n') + content.trim() + '\n'
 
   const baseDir = path.join(process.cwd(), 'data', 'blog')
-  const targetDir =
-    folder === 'news'
-      ? path.join(baseDir, 'news')
-      : folder === 'newsletter'
-        ? path.join(baseDir, 'newsletter')
-        : baseDir
+  const subfolder = folder === 'root' ? '' : folder
+  const targetDir = path.join(baseDir, subfolder)
   const filePath = path.join(targetDir, `${slug}.mdx`)
 
   try {
