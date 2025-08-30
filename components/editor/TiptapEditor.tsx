@@ -16,19 +16,8 @@ export type TiptapEditorProps = {
   placeholder?: string
   onUpdateMarkdown?: (markdown: string) => void
 }
-
-// Helper types for tiptap-markdown
-type MarkdownStorage = {
-  getMarkdown: () => string
-}
-function getMarkdownFromEditor(ed: Editor): string {
-  const storage = (ed as Editor & { storage?: { markdown?: MarkdownStorage } }).storage
-  return storage && storage.markdown ? storage.markdown.getMarkdown() : ''
-}
-function setMarkdownContent(ed: Editor, md: string) {
-  // tiptap-markdown supports setContent with markdown input
-  ed.commands.setContent(md)
-}
+// Helpers are shared for unit tests
+import { getMarkdownFromEditor, setMarkdownContent } from '@/components/editor/markdown'
 
 // Simple toolbar actions
 const ToolbarButton: React.FC<{ onClick: () => void; active?: boolean; label: string }> = ({
