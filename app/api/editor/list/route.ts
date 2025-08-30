@@ -6,21 +6,23 @@ export async function GET() {
     return NextResponse.json({ error: 'Listing is disabled in production.' }, { status: 403 })
   }
 
-  const items = allBlogs.map((b) => {
-    const path = (b as { path?: string }).path
-    const folder = path?.startsWith('blog/newsletter/')
-      ? 'newsletter'
-      : path?.startsWith('blog/news/')
-        ? 'news'
-        : 'root'
-    return {
-      title: b.title,
-      slug: b.slug,
-      summary: b.summary ?? '',
-      draft: Boolean(b.draft),
-      folder,
-    }
-  })
+  const items = allBlogs
+    .filter((b) => b.type === 'Blog')
+    .map((b) => {
+      const path = (b as { path?: string }).path
+      const folder = path?.startsWith('blog/newsletter/')
+        ? 'newsletter'
+        : path?.startsWith('blog/news/')
+          ? 'news'
+          : 'root'
+      return {
+        title: b.title,
+        slug: b.slug,
+        summary: b.summary ?? '',
+        draft: Boolean(b.draft),
+        folder,
+      }
+    })
 
   // sort by title for UX
   items.sort((a, b) => a.title.localeCompare(b.title))
