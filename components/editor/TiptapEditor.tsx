@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useMemo } from 'react'
+import React, { useEffect, useRef } from 'react'
 import { EditorContent, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
@@ -115,13 +115,230 @@ function toMarkdown(editor: Editor | null): string {
   return body.trim()
 }
 
+// --- Minimal Markdown -> TipTap JSON parser ---
+function parseInline(text: string): JSONNode[] {
+  const nodes: JSONNode[] = []
+  const i = 0
+  // Helper to push plain text
+  const pushText = (t: string, marks: JSONMark[] = []) => {
+    if (!t) return
+    nodes.push({ type: 'text', text: t, marks: marks.length ? marks : undefined })
+  }
+  // Simple tokenization for links/images first
+  // We'll split by images and links and then process bold/italic/code inside remaining text
+  const imgLinkRegex = /(!\[[^\]]*\]\([^)]+\)|\[[^\]]+\]\([^)]+\))/g
+  let last = 0
+  for (const match of text.matchAll(imgLinkRegex)) {
+    const m = match[0]
+    const start = match.index ?? 0
+    const before = text.slice(last, start)
+    if (before) nodes.push(...processInlineMarks(before))
+    if (m.startsWith('![')) {
+      const alt = m.slice(2, m.indexOf(']'))
+      const url = m.slice(m.indexOf('(') + 1, m.lastIndexOf(')'))
+      nodes.push({ type: 'image', attrs: { src: url, alt } })
+    } else {
+      const label = m.slice(1, m.indexOf(']'))
+      const url = m.slice(m.indexOf('(') + 1, m.lastIndexOf(')'))
+      // link mark applied to label
+      nodes.push(...processInlineMarks(label, [{ type: 'link', attrs: { href: url } }]))
+    }
+    last = start + m.length
+  }
+  const rest = text.slice(last)
+  if (rest) nodes.push(...processInlineMarks(rest))
+  return nodes
+}
+
+function processInlineMarks(input: string, prependMarks: JSONMark[] = []): JSONNode[] {
+  // Handle code `code`
+  const segments: { text: string; code?: boolean }[] = []
+  let current = ''
+  let inCode = false
+  for (let i = 0; i < input.length; i++) {
+    if (input[i] === '`') {
+      segments.push({ text: current, code: inCode })
+      current = ''
+      inCode = !inCode
+    } else {
+      current += input[i]
+    }
+  }
+  segments.push({ text: current, code: inCode })
+  const out: JSONNode[] = []
+  for (const seg of segments) {
+    if (seg.code) {
+      out.push({ type: 'text', text: seg.text, marks: [...prependMarks, { type: 'code' }] })
+    } else {
+      // bold **text**, italic *text*, strike ~~text~~
+      // naive nested handling: replace tokens sequentially
+      const pushMarked = (t: string, markType: string) => ({
+        type: 'text',
+        text: t,
+        marks: [...prependMarks, { type: markType }],
+      })
+      let s = seg.text
+      const boldRegex = /\*\*([^*]+)\*\*/g
+      const strikeRegex = /~~([^~]+)~~/g
+      const italicRegex = /\*([^*]+)\*/g
+      // split by bold first
+      let last = 0
+      for (const m of s.matchAll(boldRegex)) {
+        const start = m.index ?? 0
+        const before = s.slice(last, start)
+        if (before)
+          out.push({
+            type: 'text',
+            text: before,
+            marks: prependMarks.length ? [...prependMarks] : undefined,
+          })
+        out.push(pushMarked(m[1], 'bold'))
+        last = start + m[0].length
+      }
+      s = s.slice(last)
+      // then strike
+      last = 0
+      for (const m of s.matchAll(strikeRegex)) {
+        const start = m.index ?? 0
+        const before = s.slice(last, start)
+        if (before)
+          out.push({
+            type: 'text',
+            text: before,
+            marks: prependMarks.length ? [...prependMarks] : undefined,
+          })
+        out.push(pushMarked(m[1], 'strike'))
+        last = start + m[0].length
+      }
+      s = s.slice(last)
+      // then italic
+      last = 0
+      for (const m of s.matchAll(italicRegex)) {
+        const start = m.index ?? 0
+        const before = s.slice(last, start)
+        if (before)
+          out.push({
+            type: 'text',
+            text: before,
+            marks: prependMarks.length ? [...prependMarks] : undefined,
+          })
+        out.push(pushMarked(m[1], 'italic'))
+        last = start + m[0].length
+      }
+      const tail = s.slice(last)
+      if (tail)
+        out.push({
+          type: 'text',
+          text: tail,
+          marks: prependMarks.length ? [...prependMarks] : undefined,
+        })
+    }
+  }
+  return out
+}
+
+function parseMarkdown(md?: string): JSONNode[] | undefined {
+  if (!md) return undefined
+  const lines = md.replace(/\r\n/g, '\n').split('\n')
+  const blocks: JSONNode[] = []
+  let i = 0
+  while (i < lines.length) {
+    const line = lines[i]
+    // code fence
+    if (/^```/.test(line)) {
+      i++
+      const codeLines: string[] = []
+      while (i < lines.length && !/^```/.test(lines[i])) {
+        codeLines.push(lines[i])
+        i++
+      }
+      // skip closing ```
+      if (i < lines.length && /^```/.test(lines[i])) i++
+      blocks.push({ type: 'codeBlock', content: [{ type: 'text', text: codeLines.join('\n') }] })
+      continue
+    }
+    // hr
+    if (/^---$/.test(line.trim())) {
+      blocks.push({ type: 'horizontalRule' })
+      i++
+      continue
+    }
+    // heading
+    const h = /^(#{1,6})\s+(.*)$/.exec(line)
+    if (h) {
+      blocks.push({ type: 'heading', attrs: { level: h[1].length }, content: parseInline(h[2]) })
+      i++
+      continue
+    }
+    // blockquote
+    if (/^>\s?/.test(line)) {
+      const quote: string[] = []
+      while (i < lines.length && /^>\s?/.test(lines[i])) {
+        quote.push(lines[i].replace(/^>\s?/, ''))
+        i++
+      }
+      const inner = quote.join('\n')
+      blocks.push({
+        type: 'blockquote',
+        content: [{ type: 'paragraph', content: parseInline(inner) }],
+      })
+      continue
+    }
+    // lists
+    if (/^\s*[-*]\s+/.test(line)) {
+      const items: JSONNode[] = []
+      while (i < lines.length && /^\s*[-*]\s+/.test(lines[i])) {
+        const text = lines[i].replace(/^\s*[-*]\s+/, '')
+        items.push({
+          type: 'listItem',
+          content: [{ type: 'paragraph', content: parseInline(text) }],
+        })
+        i++
+      }
+      blocks.push({ type: 'bulletList', content: items })
+      continue
+    }
+    if (/^\s*\d+\.\s+/.test(line)) {
+      const items: JSONNode[] = []
+      let start = 1
+      while (i < lines.length && /^\s*\d+\.\s+/.test(lines[i])) {
+        const m = lines[i].match(/^(\s*)(\d+)\.\s+(.*)$/)
+        const text = m ? m[3] : lines[i].replace(/^\s*\d+\.\s+/, '')
+        if (m) start = parseInt(m[2], 10)
+        items.push({
+          type: 'listItem',
+          content: [{ type: 'paragraph', content: parseInline(text) }],
+        })
+        i++
+      }
+      blocks.push({ type: 'orderedList', attrs: { start }, content: items })
+      continue
+    }
+    // blank lines -> paragraph break
+    if (!line.trim()) {
+      i++
+      continue
+    }
+    // paragraph (gather until blank)
+    const para: string[] = [line]
+    i++
+    while (i < lines.length && lines[i].trim()) {
+      para.push(lines[i])
+      i++
+    }
+    blocks.push({ type: 'paragraph', content: parseInline(para.join(' ')) })
+  }
+  return blocks
+}
+
 export const TiptapEditor: React.FC<TiptapEditorProps> = ({
   initialMarkdown,
   placeholder = 'Start writing…',
   onUpdateMarkdown,
 }) => {
-  // For simplicity, ignore initialMarkdown parsing; start empty.
+  // For simplicity, ignore initialMarkdown parsing on first construct; we'll set content via effect.
   const content = undefined
+  const skipUpdateRef = useRef(false)
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -137,6 +354,7 @@ export const TiptapEditor: React.FC<TiptapEditorProps> = ({
     ],
     content,
     onUpdate: ({ editor }) => {
+      if (skipUpdateRef.current) return
       const md = toMarkdown(editor)
       onUpdateMarkdown?.(md)
     },
@@ -156,14 +374,35 @@ export const TiptapEditor: React.FC<TiptapEditorProps> = ({
 
   // Emit initial markdown once editor is ready
   useEffect(() => {
-    if (editor && onUpdateMarkdown) {
+    if (editor && onUpdateMarkdown && !skipUpdateRef.current) {
       onUpdateMarkdown(toMarkdown(editor))
     }
   }, [editor, onUpdateMarkdown])
 
+  // Update editor content when initialMarkdown changes
+  useEffect(() => {
+    if (!editor) return
+    if (typeof initialMarkdown !== 'string') return
+    const next = initialMarkdown.trim()
+    const current = toMarkdown(editor)
+    if (next === current) return
+    const docContent = parseMarkdown(next)
+    // Prevent echo via onUpdate
+    skipUpdateRef.current = true
+    if (docContent && docContent.length > 0) {
+      editor.commands.setContent({ type: 'doc', content: docContent })
+    } else {
+      editor.commands.clearContent()
+    }
+    setTimeout(() => {
+      skipUpdateRef.current = false
+    }, 0)
+  }, [initialMarkdown, editor])
+
   return (
     <div className="w-full">
       <div className="bg-background flex flex-wrap gap-2 rounded-md border p-2">
+        {/* Toolbar Buttons */}
         <ToolbarButton
           label="Bold"
           active={editor?.isActive('bold')}

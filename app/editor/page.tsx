@@ -3,6 +3,8 @@ import React from 'react'
 import TiptapEditor from '@/components/editor/TiptapEditor'
 import { Button } from '@/components/ui/button'
 import { toKebabCaseSlug } from '@/components/lib/slug'
+import { useSearchParams } from 'next/navigation'
+import { todayLocalYMD } from '@/components/lib/date'
 
 export default function EditorPage() {
   // Avoid hydration mismatch (browser/extension may inject attributes before hydration)
@@ -21,7 +23,74 @@ export default function EditorPage() {
   const [savedPath, setSavedPath] = React.useState<string | null>(null)
   const [savedSlug, setSavedSlug] = React.useState<string | null>(null)
   const [error, setError] = React.useState<string | null>(null)
-  const fmDate = React.useMemo(() => new Date().toISOString().slice(0, 10), [])
+  const [loading, setLoading] = React.useState<boolean>(false)
+  const [date, setDate] = React.useState<string>(todayLocalYMD())
+  type PostListItem = {
+    title: string
+    slug: string
+    summary: string
+    draft: boolean
+    folder: 'root' | 'news' | 'newsletter'
+  }
+  const [posts, setPosts] = React.useState<PostListItem[]>([])
+  const searchParams = useSearchParams()
+  const fmDate = date
+  // Load list of posts (dev only)
+  React.useEffect(() => {
+    if (!mounted) return
+    ;(async () => {
+      try {
+        const res = await fetch('/api/editor/list')
+        if (!res.ok) return
+        const data = (await res.json()) as { ok?: boolean; items?: PostListItem[] }
+        if (data.ok && data.items) setPosts(data.items)
+      } catch {
+        // ignore
+      }
+    })()
+  }, [mounted])
+
+  // If slug is in query, load it
+  React.useEffect(() => {
+    if (!mounted) return
+    const slug = searchParams.get('slug')
+    if (!slug) return
+    ;(async () => {
+      setLoading(true)
+      setError(null)
+      try {
+        const res = await fetch(`/api/editor/load?slug=${encodeURIComponent(slug)}`)
+        const data = (await res.json()) as {
+          ok?: boolean
+          data?: {
+            title: string
+            summary: string
+            tags: string[]
+            draft: boolean
+            slug: string
+            date: string
+            folder: 'root' | 'news' | 'newsletter'
+            markdown: string
+          }
+          error?: string
+        }
+        if (!res.ok || !data.ok || !data.data) throw new Error(data.error || 'Failed to load')
+        setTitle(data.data.title)
+        setSummary(data.data.summary)
+        setTags(data.data.tags.join(', '))
+        setDraft(data.data.draft)
+        setSlugInput(data.data.slug)
+        setDate(data.data.date)
+        setFolder(data.data.folder)
+        setMarkdown(data.data.markdown)
+        setSavedSlug(data.data.slug)
+      } catch (e) {
+        setError((e as Error).message)
+      } finally {
+        setLoading(false)
+      }
+    })()
+  }, [mounted, searchParams])
   const fmTags = React.useMemo(() => {
     const arr = tags
       .split(',')
@@ -49,6 +118,7 @@ export default function EditorPage() {
           draft,
           slug: toKebabCaseSlug(slugInput || title || 'untitled'),
           content: markdown,
+          date,
           overwrite,
           folder,
         }),
@@ -77,6 +147,72 @@ export default function EditorPage() {
       <h1 className="text-3xl font-bold">Local Markdown Editor</h1>
 
       <div className="grid gap-4 sm:grid-cols-2">
+        <label className="flex flex-col gap-1">
+          <span className="text-muted-foreground text-sm">Load existing</span>
+          <select
+            id="editor-load"
+            className="bg-background rounded-md border p-2"
+            value=""
+            onChange={async (e) => {
+              const slug = e.target.value
+              if (!slug) return
+              setLoading(true)
+              setError(null)
+              try {
+                const res = await fetch(`/api/editor/load?slug=${encodeURIComponent(slug)}`)
+                const data = (await res.json()) as {
+                  ok?: boolean
+                  data?: {
+                    title: string
+                    summary: string
+                    tags: string[]
+                    draft: boolean
+                    slug: string
+                    date: string
+                    folder: 'root' | 'news' | 'newsletter'
+                    markdown: string
+                  }
+                  error?: string
+                }
+                if (!res.ok || !data.ok || !data.data)
+                  throw new Error(data.error || 'Failed to load')
+                const d = data.data
+                setTitle(d.title)
+                setSummary(d.summary)
+                setTags((d.tags || []).join(', '))
+                setDraft(Boolean(d.draft))
+                setSlugInput(d.slug)
+                setDate(d.date)
+                setFolder(d.folder)
+                setMarkdown(d.markdown)
+                setSavedSlug(d.slug)
+                setSavedPath(null)
+              } catch (err) {
+                setError((err as Error).message)
+              } finally {
+                setLoading(false)
+                e.currentTarget.value = ''
+              }
+            }}
+          >
+            <option value="">Select a post…</option>
+            {posts.map((p) => (
+              <option key={p.slug} value={p.slug}>
+                {p.title} {p.draft ? '(draft)' : ''}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="flex flex-col gap-1">
+          <span className="text-muted-foreground text-sm">Date</span>
+          <input
+            id="editor-date"
+            type="date"
+            className="bg-background rounded-md border p-2"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+          />
+        </label>
         <label className="flex flex-col gap-1">
           <span className="text-muted-foreground text-sm">Title</span>
           <input
@@ -161,7 +297,7 @@ export default function EditorPage() {
         <textarea
           id="markdown-output"
           className="bg-background h-48 w-full rounded-md border p-3 font-mono text-sm"
-          value={`---\ntitle: ${title}\nsummary: TODO\ndate: ${fmDate}\ntags: ${fmTags}\ndraft: true\n---\n\n${markdown}`}
+          value={`---\ntitle: ${title}\nsummary: ${summary}\ndate: ${fmDate}\ntags: ${fmTags}\ndraft: ${draft ? 'true' : 'false'}\n---\n\n${markdown}`}
           readOnly
         />
         <div className="flex items-center gap-3">
@@ -180,6 +316,7 @@ export default function EditorPage() {
           {savedPath && (
             <span className="text-sm text-green-700 dark:text-green-400">Saved: {savedPath}</span>
           )}
+          {loading && <span className="text-muted-foreground text-sm">Loading…</span>}
           {error && <span className="text-sm text-red-600">Error: {error}</span>}
         </div>
         {savedSlug && (

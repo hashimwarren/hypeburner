@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { promises as fs } from 'fs'
 import path from 'path'
 import { toKebabCaseSlug } from '@/components/lib/slug'
+import { todayLocalYMD } from '@/components/lib/date'
 
 type SaveBody = {
   title: string
@@ -41,7 +42,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Invalid slug format' }, { status: 400 })
   }
 
-  const date = (body.date || new Date().toISOString().slice(0, 10)).trim()
+  const date = (body.date || todayLocalYMD()).trim()
   const folder = body.folder || 'root'
 
   const fmLines = [
