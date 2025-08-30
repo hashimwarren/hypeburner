@@ -10,8 +10,6 @@ const ErrorCodes = {
   REQUEST_PROCESSING: 'ERR_REQUEST_PROCESSING',
 } as const
 
-const resend = new Resend(process.env.RESEND_API_KEY)
-
 export async function POST(request: Request) {
   // Environment variable validation
   if (!process.env.RESEND_API_KEY) {
@@ -37,6 +35,8 @@ export async function POST(request: Request) {
   }
 
   try {
+    // Instantiate Resend lazily to avoid build-time env access
+    const resend = new Resend(process.env.RESEND_API_KEY)
     const { name, email, message } = await request.json()
 
     // Validate required fields
