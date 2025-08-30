@@ -7,7 +7,7 @@ export default function Footer() {
     <footer>
       <div className="mt-16 flex flex-col items-center">
         {/* TODO: Add social media links when profiles are ready */}
-        {/* 
+        {/*
         <div className="mb-3 flex space-x-4">
           {siteMetadata.twitter && (
             <SocialIcon kind="twitter" href={siteMetadata.twitter} size={6} />
@@ -26,7 +26,7 @@ export default function Footer() {
         </div>
         <div className="mb-8 text-sm text-gray-500 dark:text-gray-400">
           <Link href="https://github.com/timlrx/tailwind-nextjs-starter-blog">
-            Made with ❤️ in North Carolina
+            Built on Tailwind Next.js Starter Blog
           </Link>
         </div>
       </div>

@@ -113,6 +113,17 @@ export default async function Page(props: { params: Promise<{ slug: string[] }> 
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <Layout content={mainContent} authorDetails={authorDetails} next={next} prev={prev}>
+        {process.env.NODE_ENV !== 'production' && (
+          <div className="my-4">
+            <a
+              className="text-primary text-sm underline"
+              href={`/editor?slug=${encodeURIComponent(slug)}`}
+              rel="nofollow noopener noreferrer"
+            >
+              Edit this post
+            </a>
+          </div>
+        )}
         <MDXLayoutRenderer code={post.body.code} components={components} toc={post.toc} />
       </Layout>
     </>
