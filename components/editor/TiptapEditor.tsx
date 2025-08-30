@@ -513,4 +513,4 @@ export const TiptapEditor: React.FC<TiptapEditorProps> = ({
   )
 }
 
-export default TiptapEditor
+// Prefer named exports to align with repo conventions
