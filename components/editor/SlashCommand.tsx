@@ -26,17 +26,16 @@ const SlashCommandComponent = forwardRef<SlashCommandRef, SlashCommandProps>((pr
   const selectItem = (index: number) => {
     const item = props.items[index]
     if (item) {
-      item.command(props.editor)
       props.command(item)
     }
   }
 
   const upHandler = () => {
-    setSelectedIndex((prevIndex) => (prevIndex <= 0 ? props.items.length - 1 : prevIndex - 1))
+    setSelectedIndex((prevIndex) => (prevIndex + props.items.length - 1) % props.items.length)
   }
 
   const downHandler = () => {
-    setSelectedIndex((prevIndex) => (prevIndex >= props.items.length - 1 ? 0 : prevIndex + 1))
+    setSelectedIndex((prevIndex) => (prevIndex + 1) % props.items.length)
   }
 
   const enterHandler = () => {
@@ -49,22 +48,22 @@ const SlashCommandComponent = forwardRef<SlashCommandRef, SlashCommandProps>((pr
 
   useImperativeHandle(ref, () => ({
     onKeyDown: (event: KeyboardEvent) => {
-      if (event.key === 'ArrowUp') {
-        upHandler()
-        return true
-      }
+      switch (event.key) {
+        case 'ArrowUp':
+          upHandler()
+          return true
 
-      if (event.key === 'ArrowDown') {
-        downHandler()
-        return true
-      }
+        case 'ArrowDown':
+          downHandler()
+          return true
 
-      if (event.key === 'Enter') {
-        enterHandler()
-        return true
-      }
+        case 'Enter':
+          enterHandler()
+          return true
 
-      return false
+        default:
+          return false
+      }
     },
   }))
 

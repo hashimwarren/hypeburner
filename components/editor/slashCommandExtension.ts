@@ -1,7 +1,7 @@
 import { Extension } from '@tiptap/core'
-import Suggestion from '@tiptap/suggestion'
+import Suggestion, { SuggestionOptions, SuggestionProps } from '@tiptap/suggestion'
 import { ReactRenderer } from '@tiptap/react'
-import { Editor } from '@tiptap/react'
+import { Editor, Range } from '@tiptap/react'
 import tippy, { Instance as TippyInstance } from 'tippy.js'
 
 import { SlashCommand, SlashCommandRef, SlashCommandItem } from './SlashCommand'
@@ -19,11 +19,16 @@ export const SlashCommandExtension = Extension.create({
           props,
         }: {
           editor: Editor
-          range: any // eslint-disable-line @typescript-eslint/no-explicit-any
+          range: Range
           props: any // eslint-disable-line @typescript-eslint/no-explicit-any
         }) => {
-          // Command execution is handled in the SlashCommand component
-          // This just closes the suggestion menu
+          // Remove the trigger character and query text
+          editor.chain().focus().deleteRange(range).run()
+
+          // Execute the selected command
+          if (props.item && typeof props.item.command === 'function') {
+            props.item.command(editor)
+          }
         },
       },
     }
@@ -48,11 +53,7 @@ export const createSlashCommandSuggestion = () => {
           description: 'Start writing with plain text',
           icon: '📝',
           command: (editor) => {
-            editor
-              .chain()
-              .focus()
-              .deleteRange({ from: editor.state.selection.from - 1, to: editor.state.selection.to })
-              .run()
+            // No additional action needed, just removes the slash
           },
         },
         {
@@ -60,12 +61,7 @@ export const createSlashCommandSuggestion = () => {
           description: 'Big section heading',
           icon: 'H1',
           command: (editor) => {
-            editor
-              .chain()
-              .focus()
-              .deleteRange({ from: editor.state.selection.from - 1, to: editor.state.selection.to })
-              .setHeading({ level: 1 })
-              .run()
+            editor.chain().focus().setHeading({ level: 1 }).run()
           },
         },
         {
@@ -73,12 +69,7 @@ export const createSlashCommandSuggestion = () => {
           description: 'Medium section heading',
           icon: 'H2',
           command: (editor) => {
-            editor
-              .chain()
-              .focus()
-              .deleteRange({ from: editor.state.selection.from - 1, to: editor.state.selection.to })
-              .setHeading({ level: 2 })
-              .run()
+            editor.chain().focus().setHeading({ level: 2 }).run()
           },
         },
         {
@@ -86,12 +77,7 @@ export const createSlashCommandSuggestion = () => {
           description: 'Small section heading',
           icon: 'H3',
           command: (editor) => {
-            editor
-              .chain()
-              .focus()
-              .deleteRange({ from: editor.state.selection.from - 1, to: editor.state.selection.to })
-              .setHeading({ level: 3 })
-              .run()
+            editor.chain().focus().setHeading({ level: 3 }).run()
           },
         },
         {
@@ -99,12 +85,7 @@ export const createSlashCommandSuggestion = () => {
           description: 'Create a simple bullet list',
           icon: '•',
           command: (editor) => {
-            editor
-              .chain()
-              .focus()
-              .deleteRange({ from: editor.state.selection.from - 1, to: editor.state.selection.to })
-              .toggleBulletList()
-              .run()
+            editor.chain().focus().toggleBulletList().run()
           },
         },
         {
@@ -112,12 +93,7 @@ export const createSlashCommandSuggestion = () => {
           description: 'Create a numbered list',
           icon: '1.',
           command: (editor) => {
-            editor
-              .chain()
-              .focus()
-              .deleteRange({ from: editor.state.selection.from - 1, to: editor.state.selection.to })
-              .toggleOrderedList()
-              .run()
+            editor.chain().focus().toggleOrderedList().run()
           },
         },
         {
@@ -125,12 +101,7 @@ export const createSlashCommandSuggestion = () => {
           description: 'Create a quote block',
           icon: '💬',
           command: (editor) => {
-            editor
-              .chain()
-              .focus()
-              .deleteRange({ from: editor.state.selection.from - 1, to: editor.state.selection.to })
-              .setBlockquote()
-              .run()
+            editor.chain().focus().setBlockquote().run()
           },
         },
         {
@@ -138,12 +109,7 @@ export const createSlashCommandSuggestion = () => {
           description: 'Create a code block',
           icon: '💻',
           command: (editor) => {
-            editor
-              .chain()
-              .focus()
-              .deleteRange({ from: editor.state.selection.from - 1, to: editor.state.selection.to })
-              .setCodeBlock()
-              .run()
+            editor.chain().focus().setCodeBlock().run()
           },
         },
         {
@@ -151,12 +117,7 @@ export const createSlashCommandSuggestion = () => {
           description: 'Add a horizontal rule',
           icon: '—',
           command: (editor) => {
-            editor
-              .chain()
-              .focus()
-              .deleteRange({ from: editor.state.selection.from - 1, to: editor.state.selection.to })
-              .setHorizontalRule()
-              .run()
+            editor.chain().focus().setHorizontalRule().run()
           },
         },
       ]
@@ -173,9 +134,7 @@ export const createSlashCommandSuggestion = () => {
       let popup: TippyInstance[]
 
       return {
-        onStart: (
-          props: any // eslint-disable-line @typescript-eslint/no-explicit-any
-        ) => {
+        onStart: (props: SuggestionProps) => {
           component = new ReactRenderer(SlashCommand, {
             props: {
               ...props,
@@ -185,7 +144,7 @@ export const createSlashCommandSuggestion = () => {
           })
 
           popup = tippy('body', {
-            getReferenceClientRect: props.clientRect,
+            getReferenceClientRect: props.clientRect as () => DOMRect,
             appendTo: () => document.body,
             content: component.element,
             showOnCreate: true,
@@ -199,13 +158,11 @@ export const createSlashCommandSuggestion = () => {
           })
         },
 
-        onUpdate(
-          props: any // eslint-disable-line @typescript-eslint/no-explicit-any
-        ) {
+        onUpdate(props: SuggestionProps) {
           component.updateProps(props)
 
           popup[0].setProps({
-            getReferenceClientRect: props.clientRect,
+            getReferenceClientRect: props.clientRect as () => DOMRect,
           })
         },
 
