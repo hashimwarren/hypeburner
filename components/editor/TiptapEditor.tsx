@@ -10,6 +10,7 @@ import Image from '@tiptap/extension-image'
 import { Markdown } from 'tiptap-markdown'
 
 import { Button } from '@/components/ui/button'
+import { SlashCommandExtension, createSlashCommandSuggestion } from './slashCommandExtension'
 
 export type TiptapEditorProps = {
   initialMarkdown?: string
@@ -59,6 +60,9 @@ export const TiptapEditor: React.FC<TiptapEditorProps> = ({
       Image,
       Markdown.configure({
         // Keep defaults; we want GitHub-flavored basics handled by remark on MDX import
+      }),
+      SlashCommandExtension.configure({
+        suggestion: createSlashCommandSuggestion(),
       }),
     ],
     content,
@@ -209,6 +213,8 @@ export const TiptapEditor: React.FC<TiptapEditorProps> = ({
               const res = await fetch('/api/editor/upload', { method: 'POST', body: form })
               const data = (await res.json()) as { ok?: boolean; src?: string; error?: string }
               if (!res.ok || !data.ok || !data.src) throw new Error(data.error || 'Upload failed')
+
+              // Insert image in editor
               editor.chain().focus().setImage({ src: data.src, alt }).run()
             } catch (err) {
               alert((err as Error).message)

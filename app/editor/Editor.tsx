@@ -25,6 +25,7 @@ export default function Editor() {
   const [error, setError] = React.useState<string | null>(null)
   const [loading, setLoading] = React.useState<boolean>(false)
   const [date, setDate] = React.useState<string>(todayLocalYMD())
+
   type PostListItem = {
     title: string
     slug: string
@@ -148,7 +149,9 @@ export default function Editor() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6 px-4 py-6">
-      <h1 className="text-3xl font-bold">Local Markdown Editor</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold">Local Markdown Editor</h1>
+      </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="flex flex-col gap-1">
