@@ -83,7 +83,7 @@ const SlashCommandComponent = forwardRef<SlashCommandRef, SlashCommandProps>((pr
             {item.icon}
           </span>
           <div className="flex-1">
-            <div className="leading-5 font-medium">{item.title}</div>
+            <div className="leading-tight font-medium">{item.title}</div>
             <div
               className={`text-xs leading-4 ${
                 index === selectedIndex
