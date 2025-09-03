@@ -71,7 +71,7 @@ const SlashCommandComponent = forwardRef<SlashCommandRef, SlashCommandProps>((pr
     <div className="relative z-50 w-80 rounded-lg border border-gray-200 bg-white p-1 shadow-xl dark:border-gray-700 dark:bg-gray-900">
       {props.items.map((item, index) => (
         <button
-          key={index}
+          key={item.title}
           className={`flex w-full items-center gap-3 rounded-md p-3 text-left transition-colors hover:bg-blue-50 dark:hover:bg-blue-900/20 ${
             index === selectedIndex
               ? 'bg-blue-100 text-blue-900 dark:bg-blue-900/30 dark:text-blue-100'
