@@ -26,8 +26,8 @@ export const SlashCommandExtension = Extension.create({
           editor.chain().focus().deleteRange(range).run()
 
           // Execute the selected command
-          if (props.item && typeof props.item.command === 'function') {
-            props.item.command(editor)
+          if (props && typeof props.command === 'function') {
+            props.command(editor)
           }
         },
       },
