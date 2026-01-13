@@ -11,6 +11,7 @@ const ErrorCodes = {
 } as const
 
 // Instantiate Resend once outside the handler for better performance
+// Note: Server restart is required if RESEND_API_KEY environment variable changes
 let resendInstance: Resend | null = null
 
 function getResendInstance() {

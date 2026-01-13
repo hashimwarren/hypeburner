@@ -79,8 +79,12 @@ export default function ListLayout({
 
     const searchLower = searchValue.toLowerCase()
     return posts.filter((post) => {
-      const searchContent = post.title + post.summary + post.tags?.join(' ')
-      return searchContent.toLowerCase().includes(searchLower)
+      // Check each field separately to avoid creating concatenated strings
+      return (
+        post.title.toLowerCase().includes(searchLower) ||
+        post.summary?.toLowerCase().includes(searchLower) ||
+        post.tags?.some((tag) => tag.toLowerCase().includes(searchLower))
+      )
     })
   }, [posts, searchValue])
 
