@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { usePathname } from 'next/navigation'
 import { formatDate } from 'pliny/utils/formatDate'
 import { CoreContent } from 'pliny/utils/contentlayer'
@@ -72,10 +72,17 @@ export default function ListLayout({
   pagination,
 }: ListLayoutProps) {
   const [searchValue, setSearchValue] = useState('')
-  const filteredBlogPosts = posts.filter((post) => {
-    const searchContent = post.title + post.summary + post.tags?.join(' ')
-    return searchContent.toLowerCase().includes(searchValue.toLowerCase())
-  })
+
+  // Memoize filtered posts to avoid recomputing on every render
+  const filteredBlogPosts = useMemo(() => {
+    if (!searchValue) return posts
+
+    const searchLower = searchValue.toLowerCase()
+    return posts.filter((post) => {
+      const searchContent = post.title + post.summary + post.tags?.join(' ')
+      return searchContent.toLowerCase().includes(searchLower)
+    })
+  }, [posts, searchValue])
 
   // If initialDisplayPosts exist, display it if no searchValue is specified
   const displayPosts =

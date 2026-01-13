@@ -44,85 +44,87 @@ export const SlashCommandExtension = Extension.create({
   },
 })
 
+// Define slash command items once outside the function to avoid recreation
+const SLASH_COMMAND_ITEMS: SlashCommandItem[] = [
+  {
+    title: 'Text',
+    description: 'Start writing with plain text',
+    icon: '📝',
+    command: (editor) => {
+      // No additional action needed, just removes the slash
+    },
+  },
+  {
+    title: 'Heading 1',
+    description: 'Big section heading',
+    icon: 'H1',
+    command: (editor) => {
+      editor.chain().focus().setHeading({ level: 1 }).run()
+    },
+  },
+  {
+    title: 'Heading 2',
+    description: 'Medium section heading',
+    icon: 'H2',
+    command: (editor) => {
+      editor.chain().focus().setHeading({ level: 2 }).run()
+    },
+  },
+  {
+    title: 'Heading 3',
+    description: 'Small section heading',
+    icon: 'H3',
+    command: (editor) => {
+      editor.chain().focus().setHeading({ level: 3 }).run()
+    },
+  },
+  {
+    title: 'Bullet List',
+    description: 'Create a simple bullet list',
+    icon: '•',
+    command: (editor) => {
+      editor.chain().focus().toggleBulletList().run()
+    },
+  },
+  {
+    title: 'Numbered List',
+    description: 'Create a numbered list',
+    icon: '1.',
+    command: (editor) => {
+      editor.chain().focus().toggleOrderedList().run()
+    },
+  },
+  {
+    title: 'Quote',
+    description: 'Create a quote block',
+    icon: '💬',
+    command: (editor) => {
+      editor.chain().focus().setBlockquote().run()
+    },
+  },
+  {
+    title: 'Code Block',
+    description: 'Create a code block',
+    icon: '💻',
+    command: (editor) => {
+      editor.chain().focus().setCodeBlock().run()
+    },
+  },
+  {
+    title: 'Divider',
+    description: 'Add a horizontal rule',
+    icon: '—',
+    command: (editor) => {
+      editor.chain().focus().setHorizontalRule().run()
+    },
+  },
+]
+
 export const createSlashCommandSuggestion = () => {
   return {
     items: ({ query }: { query: string }) => {
-      const items: SlashCommandItem[] = [
-        {
-          title: 'Text',
-          description: 'Start writing with plain text',
-          icon: '📝',
-          command: (editor) => {
-            // No additional action needed, just removes the slash
-          },
-        },
-        {
-          title: 'Heading 1',
-          description: 'Big section heading',
-          icon: 'H1',
-          command: (editor) => {
-            editor.chain().focus().setHeading({ level: 1 }).run()
-          },
-        },
-        {
-          title: 'Heading 2',
-          description: 'Medium section heading',
-          icon: 'H2',
-          command: (editor) => {
-            editor.chain().focus().setHeading({ level: 2 }).run()
-          },
-        },
-        {
-          title: 'Heading 3',
-          description: 'Small section heading',
-          icon: 'H3',
-          command: (editor) => {
-            editor.chain().focus().setHeading({ level: 3 }).run()
-          },
-        },
-        {
-          title: 'Bullet List',
-          description: 'Create a simple bullet list',
-          icon: '•',
-          command: (editor) => {
-            editor.chain().focus().toggleBulletList().run()
-          },
-        },
-        {
-          title: 'Numbered List',
-          description: 'Create a numbered list',
-          icon: '1.',
-          command: (editor) => {
-            editor.chain().focus().toggleOrderedList().run()
-          },
-        },
-        {
-          title: 'Quote',
-          description: 'Create a quote block',
-          icon: '💬',
-          command: (editor) => {
-            editor.chain().focus().setBlockquote().run()
-          },
-        },
-        {
-          title: 'Code Block',
-          description: 'Create a code block',
-          icon: '💻',
-          command: (editor) => {
-            editor.chain().focus().setCodeBlock().run()
-          },
-        },
-        {
-          title: 'Divider',
-          description: 'Add a horizontal rule',
-          icon: '—',
-          command: (editor) => {
-            editor.chain().focus().setHorizontalRule().run()
-          },
-        },
-      ]
-
-      return items.filter(
+      // Filter the pre-defined items array instead of creating new one each time
+      return SLASH_COMMAND_ITEMS.filter(
         (item) =>
           item.title.toLowerCase().startsWith(query.toLowerCase()) ||
           item.description.toLowerCase().includes(query.toLowerCase())
