@@ -23,8 +23,11 @@ const MobileNav = () => {
   }
 
   useEffect(() => {
-    return clearAllBodyScrollLocks
-  })
+    // Cleanup function to clear all body scroll locks when component unmounts
+    return () => {
+      clearAllBodyScrollLocks()
+    }
+  }, [])
 
   return (
     <>
