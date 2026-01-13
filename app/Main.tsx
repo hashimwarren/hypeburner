@@ -4,12 +4,16 @@ import siteMetadata from '@/data/siteMetadata'
 import { formatDate } from 'pliny/utils/formatDate'
 import NewsletterForm from 'pliny/ui/NewsletterForm'
 import { allAuthors } from 'contentlayer/generated'
+import { useMemo } from 'react'
 
 const MAX_DISPLAY = 5
 
 export default function Home({ posts }) {
-  // Get the default author or the first author in the list
-  const defaultAuthor = allAuthors.find((author) => author.slug === 'default') || allAuthors[0]
+  // Memoize default author lookup to avoid repeated find operations
+  const defaultAuthor = useMemo(
+    () => allAuthors.find((author) => author.slug === 'default') || allAuthors[0],
+    []
+  )
 
   return (
     <>

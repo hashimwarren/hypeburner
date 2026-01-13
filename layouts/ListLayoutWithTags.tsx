@@ -9,6 +9,7 @@ import Link from '@/components/Link'
 import Tag from '@/components/Tag'
 import siteMetadata from '@/data/siteMetadata'
 import tagData from 'app/tag-data.json'
+import { useMemo } from 'react'
 
 interface PaginationProps {
   totalPages: number
@@ -74,8 +75,12 @@ export default function ListLayoutWithTags({
 }: ListLayoutProps) {
   const pathname = usePathname()
   const tagCounts = tagData as Record<string, number>
-  const tagKeys = Object.keys(tagCounts)
-  const sortedTags = tagKeys.sort((a, b) => tagCounts[b] - tagCounts[a])
+
+  // Memoize tag sorting to avoid recomputing on every render
+  const sortedTags = useMemo(() => {
+    const tagKeys = Object.keys(tagCounts)
+    return tagKeys.sort((a, b) => tagCounts[b] - tagCounts[a])
+  }, [tagCounts])
 
   const displayPosts = initialDisplayPosts.length > 0 ? initialDisplayPosts : posts
 

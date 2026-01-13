@@ -10,6 +10,16 @@ const ErrorCodes = {
   REQUEST_PROCESSING: 'ERR_REQUEST_PROCESSING',
 } as const
 
+// Instantiate Resend once outside the handler for better performance
+let resendInstance: Resend | null = null
+
+function getResendInstance() {
+  if (!resendInstance && process.env.RESEND_API_KEY) {
+    resendInstance = new Resend(process.env.RESEND_API_KEY)
+  }
+  return resendInstance
+}
+
 export async function POST(request: Request) {
   // Environment variable validation
   if (!process.env.RESEND_API_KEY) {
@@ -35,8 +45,10 @@ export async function POST(request: Request) {
   }
 
   try {
-    // Instantiate Resend lazily to avoid build-time env access
-    const resend = new Resend(process.env.RESEND_API_KEY)
+    const resend = getResendInstance()
+    if (!resend) {
+      throw new Error('Failed to initialize email service')
+    }
     const { name, email, message } = await request.json()
 
     // Validate required fields
