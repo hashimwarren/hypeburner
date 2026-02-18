@@ -1,18 +1,17 @@
 import { MetadataRoute } from 'next'
-import { allBlogs } from 'contentlayer/generated'
 import siteMetadata from '@/data/siteMetadata'
+import { getSitemapEntries } from 'lib/cms/payload-adapter.mjs'
 
 export const dynamic = 'force-static'
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const siteUrl = siteMetadata.siteUrl
 
-  const blogRoutes = allBlogs
-    .filter((post) => !post.draft)
-    .map((post) => ({
-      url: `${siteUrl}/${post.path}`,
-      lastModified: post.lastmod || post.date,
-    }))
+  const entries = await getSitemapEntries()
+  const blogRoutes = entries.map((post) => ({
+    url: `${siteUrl}/${post.path}`,
+    lastModified: post.lastModified,
+  }))
 
   const routes = ['', 'blog', 'projects', 'tags'].map((route) => ({
     url: `${siteUrl}/${route}`,

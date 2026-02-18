@@ -3,13 +3,23 @@ import Tag from '@/components/Tag'
 import siteMetadata from '@/data/siteMetadata'
 import { formatDate } from 'pliny/utils/formatDate'
 import NewsletterForm from 'pliny/ui/NewsletterForm'
-import { allAuthors } from 'contentlayer/generated'
 
 const MAX_DISPLAY = 5
 
-export default function Home({ posts }) {
-  // Get the default author or the first author in the list
-  const defaultAuthor = allAuthors.find((author) => author.slug === 'default') || allAuthors[0]
+type HomePost = {
+  slug: string
+  date: string
+  title: string
+  summary?: string
+  tags?: string[]
+}
+
+type HomeProps = {
+  posts: HomePost[]
+  defaultAuthor?: { name?: string } | null
+}
+
+export default function Home({ posts, defaultAuthor }: HomeProps) {
 
   return (
     <>
@@ -48,7 +58,7 @@ export default function Home({ posts }) {
                             </Link>
                           </h2>
                           <div className="flex flex-wrap">
-                            {tags.map((tag) => (
+                            {(tags || []).map((tag) => (
                               <Tag key={tag} text={tag} />
                             ))}
                           </div>

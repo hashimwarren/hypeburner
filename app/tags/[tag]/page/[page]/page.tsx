@@ -1,14 +1,11 @@
-import { slug } from 'github-slugger'
-import { allCoreContent, sortPosts } from 'pliny/utils/contentlayer'
 import ListLayout from '@/layouts/ListLayoutWithTags'
-import { allBlogs } from 'contentlayer/generated'
-import tagData from 'app/tag-data.json'
 import { notFound } from 'next/navigation'
+import { getPostsByTag, getTagCounts } from 'lib/cms/payload-adapter.mjs'
 
 const POSTS_PER_PAGE = 5
 
 export const generateStaticParams = async () => {
-  const tagCounts = tagData as Record<string, number>
+  const tagCounts = await getTagCounts({ includeDrafts: false })
   return Object.keys(tagCounts).flatMap((tag) => {
     const postCount = tagCounts[tag]
     const totalPages = Math.max(1, Math.ceil(postCount / POSTS_PER_PAGE))
@@ -24,9 +21,7 @@ export default async function TagPage(props: { params: Promise<{ tag: string; pa
   const tag = decodeURI(params.tag)
   const title = tag[0].toUpperCase() + tag.split(' ').join('-').slice(1)
   const pageNumber = parseInt(params.page)
-  const filteredPosts = allCoreContent(
-    sortPosts(allBlogs.filter((post) => post.tags && post.tags.map((t) => slug(t)).includes(tag)))
-  )
+  const filteredPosts = await getPostsByTag(tag, { includeDrafts: false })
   const totalPages = Math.ceil(filteredPosts.length / POSTS_PER_PAGE)
 
   // Return 404 for invalid page numbers or empty pages

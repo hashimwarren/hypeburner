@@ -1,16 +1,8 @@
-import { writeFileSync, mkdirSync, readFileSync } from 'fs'
+import { writeFileSync, mkdirSync } from 'fs'
 import path from 'path'
-import { fileURLToPath } from 'url'
-import { slug } from 'github-slugger'
 import { escape } from 'pliny/utils/htmlEscaper.js'
 import siteMetadata from '../data/siteMetadata.js'
-
-// Fix: Replace the import assertion with a direct file read
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const tagData = JSON.parse(readFileSync(path.join(__dirname, '../app/tag-data.json'), 'utf8'))
-
-import { allBlogs } from '../.contentlayer/generated/index.mjs'
-import { sortPosts } from 'pliny/utils/contentlayer.js'
+import { getRssFeedData, sortPostsByDate } from '../lib/cms/payload-adapter.mjs'
 
 const outputFolder = process.env.EXPORT ? 'out' : 'public'
 
@@ -42,17 +34,18 @@ const generateRss = (config, posts, page = 'feed.xml') => `
   </rss>
 `
 
-async function generateRSS(config, allBlogs, page = 'feed.xml') {
-  const publishPosts = allBlogs.filter((post) => post.draft !== true)
+async function generateRSS(config, page = 'feed.xml') {
+  const { posts: publishPosts, tags: tagPostMap } = await getRssFeedData()
+
   // RSS for blog post
   if (publishPosts.length > 0) {
-    const rss = generateRss(config, sortPosts(publishPosts))
+    const rss = generateRss(config, sortPostsByDate(publishPosts))
     writeFileSync(`./${outputFolder}/${page}`, rss)
   }
 
   if (publishPosts.length > 0) {
-    for (const tag of Object.keys(tagData)) {
-      const filteredPosts = allBlogs.filter((post) => post.tags.map((t) => slug(t)).includes(tag))
+    for (const tag of Object.keys(tagPostMap)) {
+      const filteredPosts = sortPostsByDate(tagPostMap[tag])
       const rss = generateRss(config, filteredPosts, `tags/${tag}/${page}`)
       const rssPath = path.join(outputFolder, 'tags', tag)
       mkdirSync(rssPath, { recursive: true })
@@ -61,8 +54,8 @@ async function generateRSS(config, allBlogs, page = 'feed.xml') {
   }
 }
 
-const rss = () => {
-  generateRSS(siteMetadata, allBlogs)
+const rss = async () => {
+  await generateRSS(siteMetadata)
   console.log('RSS feed generated...')
 }
 export default rss
