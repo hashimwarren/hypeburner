@@ -2,17 +2,12 @@
   "compilerOptions": {
     "incremental": true,
     "target": "ES6",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
+    "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": false,
     "forceConsistentCasingInFileNames": true,
     "noEmit": true,
-    "composite": true,
     "esModuleInterop": true,
     "module": "esnext",
     "moduleResolution": "bundler",
@@ -20,29 +15,15 @@
     "isolatedModules": true,
     "jsx": "react-jsx",
     "baseUrl": ".",
-    "types": [
-      "jest",
-      "@testing-library/jest-dom"
-    ],
+    "types": ["jest", "@testing-library/jest-dom"],
     "paths": {
-      "@/components/*": [
-        "components/*"
-      ],
-      "@/data/*": [
-        "data/*"
-      ],
-      "@/layouts/*": [
-        "layouts/*"
-      ],
-      "@/css/*": [
-        "css/*"
-      ],
-      "contentlayer/generated": [
-        "./.contentlayer/generated"
-      ],
-      "pliny/*": [
-        "node_modules/pliny/*"
-      ]
+      "@/components/*": ["components/*"],
+      "@/data/*": ["data/*"],
+      "@/layouts/*": ["layouts/*"],
+      "@/lib/*": ["lib/*"],
+      "@/css/*": ["css/*"],
+      "contentlayer/generated": ["./.contentlayer/generated"],
+      "pliny/*": ["node_modules/pliny/*"]
     },
     "plugins": [
       {
@@ -63,7 +44,5 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts"
   ],
-  "exclude": [
-    "node_modules"
-  ]
+  "exclude": ["node_modules"]
 }
