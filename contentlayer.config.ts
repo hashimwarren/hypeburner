@@ -180,8 +180,14 @@ export default makeSource({
     ],
   },
   onSuccess: async (importData) => {
-    const { allBlogs } = await importData()
-    createTagCount(allBlogs)
-    createSearchIndex(allBlogs)
+    const data = (await importData()) as { allBlogs?: unknown; allDocuments?: unknown }
+    const allBlogs = Array.isArray(data.allBlogs)
+      ? data.allBlogs
+      : Array.isArray(data.allDocuments)
+        ? data.allDocuments
+        : []
+
+    createTagCount(allBlogs as Array<{ tags?: string[]; draft?: boolean }>)
+    createSearchIndex(allBlogs as Parameters<typeof sortPosts>[0])
   },
 })
