@@ -5,6 +5,7 @@ import { Metadata } from 'next'
 import { getPostsByTag, getTagSlugs } from 'lib/cms/payload-adapter.mjs'
 
 const POSTS_PER_PAGE = 5
+export const dynamic = 'force-dynamic'
 
 export async function generateMetadata(props: {
   params: Promise<{ tag: string }>
