@@ -20,7 +20,6 @@ type HomeProps = {
 }
 
 export default function Home({ posts, defaultAuthor }: HomeProps) {
-
   return (
     <>
       <div className="divide-y divide-gray-200 dark:divide-gray-700">
