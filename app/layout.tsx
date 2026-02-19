@@ -11,6 +11,7 @@ import Footer from '@/components/Footer'
 import siteMetadata from '@/data/siteMetadata'
 import { ThemeProviders } from './theme-providers'
 import { Metadata } from 'next'
+import { headers } from 'next/headers'
 
 const space_grotesk = Space_Grotesk({
   subsets: ['latin'],
@@ -58,7 +59,15 @@ export const metadata: Metadata = {
   },
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const requestHeaders = await headers()
+  const pathname =
+    requestHeaders.get('x-pathname') ||
+    requestHeaders.get('next-url') ||
+    requestHeaders.get('x-invoke-path') ||
+    ''
+  const isCmsRoute = pathname.startsWith('/cms')
+
   return (
     <html lang={siteMetadata.language} className={space_grotesk.variable} suppressHydrationWarning>
       <head>
@@ -78,16 +87,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         */}
       </head>
       <body className="bg-white text-black antialiased dark:bg-gray-950 dark:text-white">
-        <ThemeProviders>
-          <Analytics analyticsConfig={siteMetadata.analytics as AnalyticsConfig} />
-          <SectionContainer>
-            <SearchProvider searchConfig={siteMetadata.search as SearchConfig}>
-              <Header />
-              <main className="mb-auto">{children}</main>
-            </SearchProvider>
-            <Footer />
-          </SectionContainer>
-        </ThemeProviders>
+        {isCmsRoute ? (
+          children
+        ) : (
+          <ThemeProviders>
+            <Analytics analyticsConfig={siteMetadata.analytics as AnalyticsConfig} />
+            <SectionContainer>
+              <SearchProvider searchConfig={siteMetadata.search as SearchConfig}>
+                <Header />
+                <main className="mb-auto">{children}</main>
+              </SearchProvider>
+              <Footer />
+            </SectionContainer>
+          </ThemeProviders>
+        )}
       </body>
     </html>
   )
