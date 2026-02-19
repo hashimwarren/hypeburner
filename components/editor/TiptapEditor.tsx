@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { EditorContent, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
@@ -36,6 +36,44 @@ const ToolbarButton: React.FC<{ onClick: () => void; active?: boolean; label: st
   </Button>
 )
 
+// Basic slash command menu shown when the user types `/`
+const SlashCommandMenu: React.FC<{
+  editor: Editor
+  range: { from: number; to: number }
+  coords: { left: number; top: number }
+  onClose: () => void
+}> = ({ editor, range, coords, onClose }) => {
+  const items = [
+    { label: 'Heading 1', action: () => editor.chain().focus().toggleHeading({ level: 1 }).run() },
+    { label: 'Heading 2', action: () => editor.chain().focus().toggleHeading({ level: 2 }).run() },
+    { label: 'Bullet List', action: () => editor.chain().focus().toggleBulletList().run() },
+    { label: 'Ordered List', action: () => editor.chain().focus().toggleOrderedList().run() },
+    { label: 'Code Block', action: () => editor.chain().focus().toggleCodeBlock().run() },
+  ]
+
+  return (
+    <div
+      className="bg-popover absolute z-10 w-40 rounded-md border p-1 shadow"
+      style={{ left: coords.left, top: coords.top }}
+    >
+      {items.map((item) => (
+        <button
+          key={item.label}
+          className="hover:bg-accent block w-full rounded-sm px-2 py-1 text-left text-sm"
+          onMouseDown={(e) => {
+            e.preventDefault()
+            editor.chain().focus().deleteRange(range).run()
+            item.action()
+            onClose()
+          }}
+        >
+          {item.label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
 // Remove custom Markdown parsing/serialization in favor of Tiptap Markdown extension
 
 export const TiptapEditor: React.FC<TiptapEditorProps> = ({
@@ -46,6 +84,8 @@ export const TiptapEditor: React.FC<TiptapEditorProps> = ({
   // For simplicity, ignore initialMarkdown parsing on first construct; we'll set content via effect.
   const content = undefined
   const skipUpdateRef = useRef(false)
+  const [slashRange, setSlashRange] = useState<{ from: number; to: number } | null>(null)
+  const [slashCoords, setSlashCoords] = useState<{ left: number; top: number } | null>(null)
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -74,6 +114,24 @@ export const TiptapEditor: React.FC<TiptapEditorProps> = ({
     editorProps: {
       attributes: {
         class: 'prose prose-slate dark:prose-invert max-w-none focus:outline-none min-h-[240px]',
+      },
+      handleKeyDown(view, event) {
+        if (event.key === '/' && !slashRange) {
+          const { from } = view.state.selection
+          setTimeout(() => {
+            const coords = view.coordsAtPos(from + 1)
+            setSlashCoords({ left: coords.left, top: coords.bottom })
+            setSlashRange({ from, to: from + 1 })
+          })
+        } else if (slashRange && event.key === 'Escape') {
+          setSlashRange(null)
+          setSlashCoords(null)
+          return true
+        } else if (slashRange && !['ArrowUp', 'ArrowDown', 'Enter'].includes(event.key)) {
+          setSlashRange(null)
+          setSlashCoords(null)
+        }
+        return false
       },
     },
   })
@@ -195,8 +253,19 @@ export const TiptapEditor: React.FC<TiptapEditorProps> = ({
           }}
         />
       </div>
-      <div className="bg-background mt-2 rounded-md border p-3">
+      <div className="bg-background relative mt-2 rounded-md border p-3">
         <EditorContent editor={editor} data-testid="tiptap-editor" />
+        {editor && slashRange && slashCoords && (
+          <SlashCommandMenu
+            editor={editor}
+            range={slashRange}
+            coords={slashCoords}
+            onClose={() => {
+              setSlashRange(null)
+              setSlashCoords(null)
+            }}
+          />
+        )}
         <input
           id="tiptap-image-input"
           type="file"
