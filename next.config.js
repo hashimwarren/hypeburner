@@ -71,6 +71,12 @@ module.exports = () => {
     basePath,
     reactStrictMode: true,
     trailingSlash: false,
+    serverExternalPackages: [
+      '@payloadcms/db-postgres',
+      '@payloadcms/drizzle',
+      'drizzle-kit',
+      'esbuild-register',
+    ],
     pageExtensions: ['ts', 'tsx', 'js', 'jsx', 'md', 'mdx'],
     images: {
       remotePatterns: [

@@ -1,5 +1,12 @@
 import { NextResponse } from 'next/server'
-import { allBlogs } from 'contentlayer/generated'
+import { lexicalToPlainText } from 'src/payload/lexical'
+import { getPostBySlug } from 'src/payload/queries'
+
+function toLocalDate(value: string): string {
+  const parsed = new Date(value)
+  if (Number.isNaN(parsed.getTime())) return ''
+  return parsed.toISOString().split('T')[0]
+}
 
 export async function GET(request: Request) {
   if (process.env.NODE_ENV === 'production' || process.env.VERCEL === '1') {
@@ -10,28 +17,28 @@ export async function GET(request: Request) {
   const slug = searchParams.get('slug') || ''
   if (!slug) return NextResponse.json({ error: 'Missing slug' }, { status: 400 })
 
-  const doc = allBlogs.find((b) => b.type === 'Blog' && b.slug === slug)
-  if (!doc) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  const post = await getPostBySlug(slug)
+  if (!post) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-  const path = (doc as { path?: string }).path
-  const folder = path?.startsWith('blog/newsletter/')
+  const folder = post.slug.startsWith('newsletter/')
     ? 'newsletter'
-    : path?.startsWith('blog/news/')
+    : post.slug.startsWith('news/')
       ? 'news'
       : 'root'
 
-  // Return front matter-ish fields and raw markdown
+  const markdown = post.sourceMarkdown || lexicalToPlainText(post.content)
+
   return NextResponse.json({
     ok: true,
     data: {
-      title: doc.title,
-      summary: doc.summary ?? '',
-      tags: doc.tags ?? [],
-      draft: Boolean(doc.draft),
-      slug: doc.slug,
-      date: doc.date,
+      title: post.title,
+      summary: post.summary ?? '',
+      tags: post.tags ?? [],
+      draft: Boolean(post.draft),
+      slug: post.slug.includes('/') ? post.slug.split('/').pop() : post.slug,
+      date: toLocalDate(post.date),
       folder,
-      markdown: doc.body.raw,
+      markdown,
     },
   })
 }
