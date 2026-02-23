@@ -1,18 +1,108 @@
-import { writeFileSync, mkdirSync, readFileSync } from 'fs'
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'fs'
 import path from 'path'
-import { fileURLToPath } from 'url'
+import { fileURLToPath, pathToFileURL } from 'url'
+import { build } from 'esbuild'
+import { config as loadDotenv } from 'dotenv'
 import { slug } from 'github-slugger'
 import { escape } from 'pliny/utils/htmlEscaper.js'
 import siteMetadata from '../data/siteMetadata.js'
 
-// Fix: Replace the import assertion with a direct file read
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const tagData = JSON.parse(readFileSync(path.join(__dirname, '../app/tag-data.json'), 'utf8'))
-
-import { allBlogs } from '../.contentlayer/generated/index.mjs'
-import { sortPosts } from 'pliny/utils/contentlayer.js'
-
 const outputFolder = process.env.EXPORT ? 'out' : 'public'
+const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
+
+loadDotenv({ path: path.resolve(rootDir, '.env.local') })
+loadDotenv({ path: path.resolve(rootDir, '.env') })
+
+function sortPosts(posts) {
+  return [...posts].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+}
+
+function toUTCString(value) {
+  const parsed = new Date(value)
+  if (Number.isNaN(parsed.getTime())) return new Date().toUTCString()
+  return parsed.toUTCString()
+}
+
+function normalizeTags(value) {
+  if (!Array.isArray(value)) return []
+  return value.map((tag) => String(tag || '').trim()).filter(Boolean)
+}
+
+function normalizePost(doc) {
+  const slugValue = String(doc?.slug || '').trim()
+  const title = String(doc?.title || '').trim()
+  if (!slugValue || !title) return null
+
+  return {
+    slug: slugValue,
+    title,
+    summary: String(doc?.summary || '').trim(),
+    date: String(doc?.publishedAt || doc?.createdAt || new Date().toISOString()),
+    tags: normalizeTags(doc?.tags),
+  }
+}
+
+async function loadPayloadConfig() {
+  const tempDir = mkdtempSync(path.join(rootDir, '.tmp-payload-config-'))
+  const outputPath = path.join(tempDir, 'payload.config.mjs')
+
+  try {
+    await build({
+      entryPoints: [path.resolve(rootDir, 'payload.config.ts')],
+      outfile: outputPath,
+      bundle: true,
+      packages: 'external',
+      platform: 'node',
+      format: 'esm',
+      target: 'node20',
+      sourcemap: false,
+    })
+
+    const configModule = await import(pathToFileURL(outputPath).href)
+    return configModule?.default || configModule
+  } finally {
+    rmSync(tempDir, { recursive: true, force: true })
+  }
+}
+
+async function getPayloadClient() {
+  const config = await loadPayloadConfig()
+  const payloadModule = await import('payload')
+  return await payloadModule.getPayload({ config })
+}
+
+async function getPublishedPosts() {
+  let payloadClient
+  try {
+    payloadClient = await getPayloadClient()
+    const result = await payloadClient.find({
+      collection: 'posts',
+      where: {
+        status: {
+          equals: 'published',
+        },
+      },
+      sort: '-publishedAt',
+      depth: 0,
+      limit: Number(process.env.PAYLOAD_QUERY_LIMIT || '1000'),
+    })
+
+    return sortPosts((result?.docs || []).map(normalizePost).filter(Boolean))
+  } catch (error) {
+    console.warn('[rss] failed to query published posts from Payload', error)
+    return []
+  } finally {
+    try {
+      if (payloadClient && typeof payloadClient.destroy === 'function') {
+        await payloadClient.destroy()
+      } else if (payloadClient?.db && typeof payloadClient.db.destroy === 'function') {
+        await payloadClient.db.destroy()
+      }
+    } catch (error) {
+      console.warn('[rss] failed to close Payload connection cleanly', error)
+    }
+  }
+}
 
 const generateRssItem = (config, post) => `
   <item>
@@ -20,9 +110,9 @@ const generateRssItem = (config, post) => `
     <title>${escape(post.title)}</title>
     <link>${config.siteUrl}/blog/${post.slug}</link>
     ${post.summary && `<description>${escape(post.summary)}</description>`}
-    <pubDate>${new Date(post.date).toUTCString()}</pubDate>
+    <pubDate>${toUTCString(post.date)}</pubDate>
     <author>${config.email} (${config.author})</author>
-    ${post.tags && post.tags.map((t) => `<category>${t}</category>`).join('')}
+    ${post.tags && post.tags.map((tag) => `<category>${escape(tag)}</category>`).join('')}
   </item>
 `
 
@@ -35,34 +125,43 @@ const generateRss = (config, posts, page = 'feed.xml') => `
       <language>${config.language}</language>
       <managingEditor>${config.email} (${config.author})</managingEditor>
       <webMaster>${config.email} (${config.author})</webMaster>
-      <lastBuildDate>${new Date(posts[0].date).toUTCString()}</lastBuildDate>
+      <lastBuildDate>${toUTCString(posts[0]?.date)}</lastBuildDate>
       <atom:link href="${config.siteUrl}/${page}" rel="self" type="application/rss+xml"/>
       ${posts.map((post) => generateRssItem(config, post)).join('')}
     </channel>
   </rss>
 `
 
-async function generateRSS(config, allBlogs, page = 'feed.xml') {
-  const publishPosts = allBlogs.filter((post) => post.draft !== true)
-  // RSS for blog post
-  if (publishPosts.length > 0) {
-    const rss = generateRss(config, sortPosts(publishPosts))
-    writeFileSync(`./${outputFolder}/${page}`, rss)
-  }
+async function generateRSS(config, posts, page = 'feed.xml') {
+  if (posts.length === 0) return
 
-  if (publishPosts.length > 0) {
-    for (const tag of Object.keys(tagData)) {
-      const filteredPosts = allBlogs.filter((post) => post.tags.map((t) => slug(t)).includes(tag))
-      const rss = generateRss(config, filteredPosts, `tags/${tag}/${page}`)
-      const rssPath = path.join(outputFolder, 'tags', tag)
-      mkdirSync(rssPath, { recursive: true })
-      writeFileSync(path.join(rssPath, page), rss)
-    }
+  const sortedPublishedPosts = sortPosts(posts)
+  const rss = generateRss(config, sortedPublishedPosts, page)
+  writeFileSync(`./${outputFolder}/${page}`, rss)
+
+  const tagSlugs = [
+    ...new Set(
+      sortedPublishedPosts.flatMap((post) => post.tags.map((tag) => slug(String(tag || '').trim())))
+    ),
+  ].filter(Boolean)
+
+  for (const tagSlug of tagSlugs) {
+    const filteredPosts = sortedPublishedPosts.filter((post) =>
+      post.tags.some((tag) => slug(String(tag || '').trim()) === tagSlug)
+    )
+    if (filteredPosts.length === 0) continue
+
+    const tagRss = generateRss(config, filteredPosts, `tags/${tagSlug}/${page}`)
+    const rssPath = path.join(outputFolder, 'tags', tagSlug)
+    mkdirSync(rssPath, { recursive: true })
+    writeFileSync(path.join(rssPath, page), tagRss)
   }
 }
 
-const rss = () => {
-  generateRSS(siteMetadata, allBlogs)
+const rss = async () => {
+  const posts = await getPublishedPosts()
+  await generateRSS(siteMetadata, posts)
   console.log('RSS feed generated...')
 }
+
 export default rss

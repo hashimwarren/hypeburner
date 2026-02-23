@@ -1,3 +1,9 @@
+import { convertMarkdownToLexical, editorConfigFactory } from '@payloadcms/richtext-lexical'
+import type { SanitizedServerEditorConfig } from '@payloadcms/richtext-lexical'
+import type { Payload, SanitizedConfig } from 'payload'
+
+const editorConfigCache = new WeakMap<SanitizedConfig, Promise<SanitizedServerEditorConfig>>()
+
 function textNode(text: string) {
   return {
     detail: 0,
@@ -23,7 +29,7 @@ function paragraphNode(text: string) {
   }
 }
 
-export function markdownToLexical(markdown: string) {
+function markdownToLexicalFallback(markdown: string) {
   const normalized = String(markdown || '')
     .replace(/\r\n/g, '\n')
     .trim()
@@ -38,6 +44,48 @@ export function markdownToLexical(markdown: string) {
       type: 'root',
       version: 1,
     },
+  }
+}
+
+async function getEditorConfig(payload: Payload): Promise<SanitizedServerEditorConfig | null> {
+  const config = payload.config as SanitizedConfig
+  let pending = editorConfigCache.get(config)
+
+  if (!pending) {
+    pending = editorConfigFactory.default({ config })
+    editorConfigCache.set(config, pending)
+  }
+
+  try {
+    return await pending
+  } catch (error) {
+    console.warn('[payload] failed to resolve lexical editor config', error)
+    return null
+  }
+}
+
+export async function markdownToLexical(markdown: string, payload?: Payload) {
+  const normalized = String(markdown || '')
+    .replace(/\r\n/g, '\n')
+    .trim()
+
+  if (!payload) {
+    return markdownToLexicalFallback(normalized)
+  }
+
+  const editorConfig = await getEditorConfig(payload)
+  if (!editorConfig) {
+    return markdownToLexicalFallback(normalized)
+  }
+
+  try {
+    return convertMarkdownToLexical({
+      editorConfig,
+      markdown: normalized,
+    })
+  } catch (error) {
+    console.warn('[payload] failed to convert markdown to lexical', error)
+    return markdownToLexicalFallback(normalized)
   }
 }
 

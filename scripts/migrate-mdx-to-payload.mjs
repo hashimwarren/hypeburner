@@ -125,7 +125,6 @@ async function resolvePayloadConfig() {
   candidates.push(
     '@payload-config',
     path.resolve(rootDir, 'payload.config.js'),
-    path.resolve(rootDir, 'payload.config.mjs'),
     path.resolve(rootDir, 'payload.config.ts')
   )
 

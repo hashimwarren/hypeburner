@@ -117,7 +117,7 @@ export async function POST(req: Request) {
     tags,
     authors: [authorID],
     layout: 'PostLayout',
-    content: markdownToLexical(content),
+    content: await markdownToLexical(content, payload),
     sourceMarkdown: content,
     legacySourcePath:
       folder === 'root' ? `data/blog/${leafSlug}.mdx` : `data/blog/${folder}/${leafSlug}.mdx`,

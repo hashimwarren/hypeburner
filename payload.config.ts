@@ -1,21 +1,23 @@
 import 'dotenv/config'
 import path from 'path'
 import { fileURLToPath } from 'url'
-import { createRequire } from 'module'
 import { postgresAdapter } from '@payloadcms/db-postgres'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import { buildConfig } from 'payload'
-
-const require = createRequire(import.meta.url)
-const { Authors } = require('./src/runtime-collections/Authors.cjs')
-const { PolarCustomers } = require('./src/runtime-collections/PolarCustomers.cjs')
-const { PolarSubscriptions } = require('./src/runtime-collections/PolarSubscriptions.cjs')
-const { PolarWebhookEvents } = require('./src/runtime-collections/PolarWebhookEvents.cjs')
-const { Posts } = require('./src/runtime-collections/Posts.cjs')
-const { Users } = require('./src/runtime-collections/Users.cjs')
+import { Authors } from './src/collections/Authors'
+import { PolarCustomers } from './src/collections/PolarCustomers'
+import { PolarSubscriptions } from './src/collections/PolarSubscriptions'
+import { PolarWebhookEvents } from './src/collections/PolarWebhookEvents'
+import { Posts } from './src/collections/Posts'
+import { Users } from './src/collections/Users'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
+const payloadSecret = process.env.PAYLOAD_SECRET?.trim()
+
+if (!payloadSecret) {
+  throw new Error('PAYLOAD_SECRET is required for Payload config.')
+}
 
 export default buildConfig({
   routes: {
@@ -36,7 +38,7 @@ export default buildConfig({
     migrationDir: path.resolve(dirname, 'migrations'),
   }),
   editor: lexicalEditor(),
-  secret: process.env.PAYLOAD_SECRET || 'change-me',
+  secret: payloadSecret,
   typescript: {
     outputFile: path.resolve(dirname, 'payload-types.ts'),
   },

@@ -5,6 +5,7 @@ import PostSimple from '@/layouts/PostSimple'
 import PostLayout from '@/layouts/PostLayout'
 import PostBanner from '@/layouts/PostBanner'
 import { Metadata } from 'next'
+import type { ComponentProps } from 'react'
 import siteMetadata from '@/data/siteMetadata'
 import { notFound } from 'next/navigation'
 import { RichText } from '@payloadcms/richtext-lexical/react'
@@ -12,6 +13,7 @@ import { getAllPostSlugs, getAllPosts, getPostBySlug } from 'src/payload/queries
 import type { SiteAuthor } from 'src/payload/types'
 
 const defaultLayout = 'PostLayout'
+type LexicalRichTextData = ComponentProps<typeof RichText>['data']
 
 function getLayoutName(layout?: string): 'PostLayout' | 'PostSimple' | 'PostBanner' {
   if (layout === 'PostSimple' || layout === 'PostBanner' || layout === 'PostLayout') return layout
@@ -114,7 +116,7 @@ export default async function Page(props: { params: Promise<{ slug: string[] }> 
         </div>
       )}
       {post.content ? (
-        <RichText data={post.content as never} />
+        <RichText data={post.content as LexicalRichTextData} />
       ) : (
         <p className="text-muted-foreground">{post.summary}</p>
       )}
