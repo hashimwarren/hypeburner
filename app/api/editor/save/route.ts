@@ -111,6 +111,7 @@ export async function POST(req: Request) {
     title,
     slug,
     status: draft ? 'draft' : 'published',
+    _status: draft ? 'draft' : 'published',
     summary,
     publishedAt: toIsoOrNow(date),
     lastmod: toIsoOrNow(date),

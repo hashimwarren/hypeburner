@@ -1,4 +1,5 @@
 import { cache } from 'react'
+import { slug } from 'github-slugger'
 import { getPayload } from 'payload'
 import config from '../../payload.config'
 import type { SiteAuthor, SitePost } from './types'
@@ -100,6 +101,7 @@ export const getAllPosts = cache(async (): Promise<SitePost[]> => {
     const result = await payload.find({
       collection: 'posts',
       draft: includeDrafts,
+      overrideAccess: true,
       depth: 2,
       limit: queryLimit,
       sort: '-publishedAt',
@@ -143,6 +145,7 @@ export const getPostBySlug = cache(async (slug: string): Promise<SitePost | null
     const result = await payload.find({
       collection: 'posts',
       draft: includeDrafts,
+      overrideAccess: true,
       depth: 2,
       where: {
         slug: {
@@ -166,13 +169,27 @@ export const getPostBySlug = cache(async (slug: string): Promise<SitePost | null
 
 export async function getTagCounts(): Promise<Record<string, number>> {
   const posts = await getAllPosts()
-  const counts: Record<string, number> = {}
+  const countsBySlug = new Map<string, { count: number; label: string }>()
   for (const post of posts) {
     for (const tag of post.tags) {
-      counts[tag] = (counts[tag] || 0) + 1
+      const label = String(tag || '').trim()
+      if (!label) continue
+
+      const key = slug(label)
+      if (!key) continue
+
+      const existing = countsBySlug.get(key)
+      if (existing) {
+        existing.count += 1
+      } else {
+        countsBySlug.set(key, { count: 1, label })
+      }
     }
   }
-  return counts
+
+  return Object.fromEntries(
+    Array.from(countsBySlug.values()).map((entry) => [entry.label, entry.count])
+  )
 }
 
 export async function getDefaultAuthor(): Promise<SiteAuthor | null> {

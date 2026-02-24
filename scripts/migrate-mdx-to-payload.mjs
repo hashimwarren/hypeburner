@@ -6,9 +6,6 @@ import { build } from 'esbuild'
 import { config as loadDotenv } from 'dotenv'
 import matter from 'gray-matter'
 
-const AUTHORS_COLLECTION = process.env.PAYLOAD_AUTHORS_COLLECTION?.trim() || 'authors'
-const POSTS_COLLECTION = process.env.PAYLOAD_POSTS_COLLECTION?.trim() || 'posts'
-
 const rootDir = process.cwd()
 const authorsDir = path.join(rootDir, 'data', 'authors')
 const blogDir = path.join(rootDir, 'data', 'blog')
@@ -17,6 +14,9 @@ const importModule = (specifier) => Function('s', 'return import(s)')(specifier)
 
 loadDotenv({ path: path.resolve(rootDir, '.env.local') })
 loadDotenv({ path: path.resolve(rootDir, '.env') })
+
+const AUTHORS_COLLECTION = process.env.PAYLOAD_AUTHORS_COLLECTION?.trim() || 'authors'
+const POSTS_COLLECTION = process.env.PAYLOAD_POSTS_COLLECTION?.trim() || 'posts'
 
 function hasFlag(flag) {
   return process.argv.slice(2).includes(flag)
@@ -309,6 +309,7 @@ async function run() {
     for (const filePath of postFiles) {
       const parsed = await parseMdxFile(filePath)
       const slug = slugFromFile(blogDir, parsed.filePath)
+      const isDraft = asBoolean(parsed.frontmatter.draft)
 
       const authorSlugs = toStringArray(parsed.frontmatter.authors)
       const resolvedAuthorIds = []
@@ -336,7 +337,8 @@ async function run() {
       const data = {
         title: asString(parsed.frontmatter.title) || slug,
         slug,
-        status: asBoolean(parsed.frontmatter.draft) ? 'draft' : 'published',
+        status: isDraft ? 'draft' : 'published',
+        _status: isDraft ? 'draft' : 'published',
         summary: asString(parsed.frontmatter.summary) || undefined,
         publishedAt: asDate(parsed.frontmatter.date),
         lastmod: asDate(parsed.frontmatter.lastmod),

@@ -1,5 +1,6 @@
 import { RichText } from '@payloadcms/richtext-lexical/react'
 import type { ComponentProps } from 'react'
+import { notFound } from 'next/navigation'
 import AuthorLayout from '@/layouts/AuthorLayout'
 import { genPageMetadata } from 'app/seo'
 import { getDefaultAuthor } from 'src/payload/queries'
@@ -9,7 +10,7 @@ type LexicalRichTextData = ComponentProps<typeof RichText>['data']
 
 export default async function Page() {
   const author = await getDefaultAuthor()
-  if (!author) return null
+  if (!author) return notFound()
 
   return (
     <AuthorLayout content={author}>
