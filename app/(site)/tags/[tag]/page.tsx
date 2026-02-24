@@ -3,7 +3,7 @@ import siteMetadata from '@/data/siteMetadata'
 import ListLayout from '@/layouts/ListLayoutWithTags'
 import { genPageMetadata } from 'app/seo'
 import { Metadata } from 'next'
-import { getAllPosts, getTagCounts } from 'src/payload/queries'
+import { getAllPosts, getTagCounts } from 'lib/cms'
 
 const POSTS_PER_PAGE = 5
 

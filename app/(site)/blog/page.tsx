@@ -1,6 +1,6 @@
 import { genPageMetadata } from 'app/seo'
 import ListLayout from '@/layouts/ListLayoutWithTags'
-import { getAllPosts, getTagCounts } from 'src/payload/queries'
+import { getAllPosts, getTagCounts } from 'lib/cms'
 
 const POSTS_PER_PAGE = 5
 

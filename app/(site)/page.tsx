@@ -1,5 +1,5 @@
 import Main from './Main'
-import { getDefaultAuthor, getHomePosts } from 'src/payload/queries'
+import { getDefaultAuthor, getHomePosts } from 'lib/cms'
 
 export const dynamic = 'force-static'
 

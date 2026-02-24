@@ -1,6 +1,6 @@
 import { MetadataRoute } from 'next'
 import siteMetadata from '@/data/siteMetadata'
-import { getAllPosts } from 'src/payload/queries'
+import { getAllPosts } from 'lib/cms'
 
 export const dynamic = 'force-static'
 

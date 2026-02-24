@@ -5,10 +5,10 @@
   "scripts": {
     "start": "next start",
     "dev": "next dev --webpack",
-    "build": "next build --webpack && cross-env NODE_OPTIONS=--experimental-json-modules node ./scripts/postbuild.mjs",
+    "build": "node ./scripts/check-runtime-cms-only.mjs && next build --webpack && cross-env NODE_OPTIONS=--experimental-json-modules node ./scripts/postbuild.mjs",
     "serve": "next start",
-    "migrate:payload": "node ./scripts/migrate-mdx-to-payload.mjs --dry-run",
-    "migrate:payload:apply": "node ./scripts/migrate-mdx-to-payload.mjs --apply",
+    "migrate:payload": "node ./scripts/migrate-mdx-to-payload.mjs --dry-run --report ./scripts/reports/migration-report.json",
+    "migrate:payload:apply": "node ./scripts/migrate-mdx-to-payload.mjs --apply --strict --report ./scripts/reports/migration-report.json",
     "payload:migrate:create": "cross-env PAYLOAD_CONFIG_PATH=payload.config.ts payload migrate:create issue53-schema",
     "payload:migrate": "cross-env PAYLOAD_CONFIG_PATH=payload.config.ts payload migrate",
     "payload:migrate:status": "cross-env PAYLOAD_CONFIG_PATH=payload.config.ts payload migrate:status",
@@ -22,7 +22,9 @@
     "test:coverage": "jest --coverage",
     "prepare": "husky",
     "env:check": "node ./scripts/check-env.mjs",
-    "deploy:smoke": "node ./scripts/smoke.mjs"
+    "deploy:smoke": "node ./scripts/smoke.mjs",
+    "artifacts:cms": "node ./scripts/generate-cms-artifacts.mjs",
+    "guard:runtime-cms": "node ./scripts/check-runtime-cms-only.mjs"
   },
   "dependencies": {
     "@headlessui/react": "2.2.0",
@@ -39,7 +41,6 @@
     "body-scroll-lock": "^4.0.0-beta.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "contentlayer2": "0.5.5",
     "dotenv": "^16.4.7",
     "esbuild": "0.25.2",
     "esbuild-register": "^3.6.0",
@@ -50,7 +51,6 @@
     "image-size": "^2.0.2",
     "lucide-react": "^0.516.0",
     "next": "16.1.6",
-    "next-contentlayer2": "0.5.5",
     "next-themes": "^0.4.6",
     "payload": "^3.0.0",
     "pliny": "0.4.1",

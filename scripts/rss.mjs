@@ -7,11 +7,13 @@ import { slug } from 'github-slugger'
 import { escape } from 'pliny/utils/htmlEscaper.js'
 import siteMetadata from '../data/siteMetadata.js'
 
-const outputFolder = process.env.EXPORT ? 'out' : 'public'
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
-
 loadDotenv({ path: path.resolve(rootDir, '.env.local') })
 loadDotenv({ path: path.resolve(rootDir, '.env') })
+const outputFolder = process.env.EXPORT ? 'out' : 'public'
+const POSTS_COLLECTION = process.env.PAYLOAD_POSTS_COLLECTION?.trim() || 'posts'
+const queryLimitValue = Number(process.env.PAYLOAD_QUERY_LIMIT || '1000')
+const QUERY_LIMIT = Number.isFinite(queryLimitValue) && queryLimitValue > 0 ? queryLimitValue : 1000
 
 function sortPosts(posts) {
   return [...posts].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
@@ -71,12 +73,13 @@ async function getPayloadClient() {
   return await payloadModule.getPayload({ config })
 }
 
-async function getPublishedPosts() {
+export async function getPublishedPosts() {
   let payloadClient
   try {
     payloadClient = await getPayloadClient()
     const result = await payloadClient.find({
-      collection: 'posts',
+      collection: POSTS_COLLECTION,
+      draft: false,
       where: {
         status: {
           equals: 'published',
@@ -84,13 +87,11 @@ async function getPublishedPosts() {
       },
       sort: '-publishedAt',
       depth: 0,
-      limit: Number(process.env.PAYLOAD_QUERY_LIMIT || '1000'),
+      limit: QUERY_LIMIT,
+      overrideAccess: true,
     })
 
     return sortPosts((result?.docs || []).map(normalizePost).filter(Boolean))
-  } catch (error) {
-    console.warn('[rss] failed to query published posts from Payload', error)
-    return []
   } finally {
     try {
       if (payloadClient && typeof payloadClient.destroy === 'function') {
@@ -133,8 +134,6 @@ const generateRss = (config, posts, page = 'feed.xml') => `
 `
 
 async function generateRSS(config, posts, page = 'feed.xml') {
-  if (posts.length === 0) return
-
   const sortedPublishedPosts = sortPosts(posts)
   const rss = generateRss(config, sortedPublishedPosts, page)
   writeFileSync(`./${outputFolder}/${page}`, rss)
@@ -158,8 +157,8 @@ async function generateRSS(config, posts, page = 'feed.xml') {
   }
 }
 
-const rss = async () => {
-  const posts = await getPublishedPosts()
+const rss = async (options = {}) => {
+  const posts = Array.isArray(options.posts) ? options.posts : await getPublishedPosts()
   await generateRSS(siteMetadata, posts)
   console.log('RSS feed generated...')
 }
