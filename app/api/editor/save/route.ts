@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server'
-import { promises as fs } from 'fs'
-import path from 'path'
+import { getPayload } from 'payload'
+import config from '../../../../payload.config'
 import { toKebabCaseSlug } from '@/components/lib/slug'
 import { todayLocalYMD } from '@/components/lib/date'
+import { markdownToLexical } from 'src/payload/lexical'
 
 type SaveBody = {
   title: string
@@ -16,8 +17,43 @@ type SaveBody = {
   folder?: 'root' | 'news' | 'newsletter'
 }
 
-function escapeYAML(str: string) {
-  return str.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
+function normalizeFolder(value: unknown): 'root' | 'news' | 'newsletter' {
+  if (value === 'news' || value === 'newsletter') return value
+  return 'root'
+}
+
+function buildFullSlug(folder: 'root' | 'news' | 'newsletter', slug: string): string {
+  if (folder === 'root') return slug
+  return `${folder}/${slug}`
+}
+
+function toIsoOrNow(value: string): string {
+  const parsed = new Date(value)
+  if (Number.isNaN(parsed.getTime())) return new Date().toISOString()
+  return parsed.toISOString()
+}
+
+async function getDefaultAuthorID(payload: Awaited<ReturnType<typeof getPayload>>) {
+  const bySlug = await payload.find({
+    collection: 'authors',
+    where: {
+      slug: {
+        equals: 'default',
+      },
+    },
+    limit: 1,
+    depth: 0,
+  })
+
+  if (bySlug.docs[0]?.id) return bySlug.docs[0].id
+
+  const fallback = await payload.find({
+    collection: 'authors',
+    limit: 1,
+    depth: 0,
+  })
+
+  return fallback.docs[0]?.id
 }
 
 export async function POST(req: Request) {
@@ -37,55 +73,81 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Missing title or content' }, { status: 400 })
   }
 
-  const slug = toKebabCaseSlug(body.slug || title)
-  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
+  const leafSlug = toKebabCaseSlug(body.slug || title)
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(leafSlug)) {
     return NextResponse.json({ error: 'Invalid slug format' }, { status: 400 })
   }
 
+  const folder = normalizeFolder(body.folder)
+  const slug = buildFullSlug(folder, leafSlug)
   const date = (body.date || todayLocalYMD()).trim()
-  const folder = body.folder || 'root'
+  const payload = await getPayload({ config })
 
-  const fmLines = [
-    '---',
-    `title: "${escapeYAML(title)}"`,
-    `date: ${date}`,
-    `summary: "${escapeYAML(summary)}"`,
-    `tags: [${tags.map((t) => `"${escapeYAML(t)}"`).join(', ')}]`,
-    `draft: ${draft ? 'true' : 'false'}`,
-    '---',
-    '',
-  ]
-  const mdx = fmLines.join('\n') + content.trim() + '\n'
-
-  const baseDir = path.join(process.cwd(), 'data', 'blog')
-  const subfolder = folder === 'root' ? '' : folder
-  const targetDir = path.join(baseDir, subfolder)
-  const filePath = path.join(targetDir, `${slug}.mdx`)
-
-  try {
-    await fs.mkdir(targetDir, { recursive: true })
-    try {
-      const stat = await fs.stat(filePath)
-      if (stat.isFile() && !overwrite) {
-        return NextResponse.json({ error: 'File already exists', slug, filePath }, { status: 409 })
-      }
-    } catch {
-      // file does not exist; proceed to write
-    }
-    await fs.writeFile(filePath, mdx, 'utf8')
-  } catch (err) {
+  const authorID = await getDefaultAuthorID(payload)
+  if (!authorID) {
     return NextResponse.json(
-      { error: 'Failed to write file', details: String(err) },
-      { status: 500 }
+      { error: 'Cannot save without at least one author in Payload.' },
+      { status: 400 }
     )
+  }
+
+  const existing = await payload.find({
+    collection: 'posts',
+    where: {
+      slug: {
+        equals: slug,
+      },
+    },
+    limit: 1,
+    depth: 0,
+    overrideAccess: true,
+  })
+
+  if (existing.docs[0] && !overwrite) {
+    return NextResponse.json({ error: 'Post already exists', slug: leafSlug }, { status: 409 })
+  }
+
+  const baseData = {
+    title,
+    slug,
+    status: draft ? 'draft' : 'published',
+    _status: draft ? 'draft' : 'published',
+    summary,
+    publishedAt: toIsoOrNow(date),
+    lastmod: toIsoOrNow(date),
+    category: folder === 'root' ? undefined : folder,
+    tags,
+    authors: [authorID],
+    layout: 'PostLayout',
+    content: await markdownToLexical(content, payload),
+    sourceMarkdown: content,
+    legacySourcePath:
+      folder === 'root' ? `data/blog/${leafSlug}.mdx` : `data/blog/${folder}/${leafSlug}.mdx`,
+  }
+
+  if (existing.docs[0]) {
+    await payload.update({
+      collection: 'posts',
+      id: existing.docs[0].id,
+      data: baseData,
+      depth: 0,
+      overrideAccess: true,
+    })
+  } else {
+    await payload.create({
+      collection: 'posts',
+      data: baseData,
+      depth: 0,
+      overrideAccess: true,
+    })
   }
 
   const relativePath =
     folder === 'news'
-      ? `data/blog/news/${slug}.mdx`
+      ? `data/blog/news/${leafSlug}.mdx`
       : folder === 'newsletter'
-        ? `data/blog/newsletter/${slug}.mdx`
-        : `data/blog/${slug}.mdx`
+        ? `data/blog/newsletter/${leafSlug}.mdx`
+        : `data/blog/${leafSlug}.mdx`
 
-  return NextResponse.json({ ok: true, slug, relativePath })
+  return NextResponse.json({ ok: true, slug: leafSlug, relativePath })
 }

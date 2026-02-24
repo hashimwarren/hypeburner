@@ -2,7 +2,7 @@ import React from 'react'
 import { render, waitFor } from '@testing-library/react'
 import { screen, fireEvent } from '@testing-library/dom'
 import '@testing-library/jest-dom'
-import ContactPage from '../app/contact/page' // Adjusted path
+import ContactPage from '../app/(site)/contact/page'
 
 describe('ContactPage', () => {
   it('renders the contact form', () => {

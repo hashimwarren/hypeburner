@@ -53,3 +53,7 @@ yarn-error.log*
 # Contentlayer
 .contentlayer
 .env*.local
+
+# generated collection artifacts
+src/collections/*.js
+src/runtime-collections/
