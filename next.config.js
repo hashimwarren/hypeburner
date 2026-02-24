@@ -6,7 +6,7 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
 
 const scriptHosts = new Set(['giscus.app', 'analytics.umami.is'])
 const frameHosts = new Set(['giscus.app'])
-const connectHosts = new Set(['api.resend.com', 'fonts.googleapis.com'])
+const connectHosts = new Set(['api.resend.com', 'fonts.googleapis.com', 'analytics.umami.is'])
 const imgHosts = ['*', 'blob:', 'data:']
 
 const ContentSecurityPolicy = `

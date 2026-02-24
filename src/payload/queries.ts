@@ -162,19 +162,31 @@ export const getPostBySlug = cache(async (slug: string): Promise<SitePost | null
 
 export async function getTagCounts(): Promise<Record<string, number>> {
   const posts = await getAllPosts()
-  const countsBySlug = new Map<string, number>()
+  const countsBySlug = new Map<string, { count: number; label: string }>()
   for (const post of posts) {
     for (const tag of post.tags) {
-      const key = slug(tag)
+      const label = String(tag || '').trim()
+      if (!label) continue
+
+      const key = slug(label)
       if (!key) continue
 
       const current = countsBySlug.get(key)
-      countsBySlug.set(key, (current || 0) + 1)
+      if (current) {
+        current.count += 1
+        // Prefer a humanized label when variants like `posthog` and `PostHog` collapse to one slug.
+        if (current.label === current.label.toLowerCase() && label !== label.toLowerCase()) {
+          current.label = label
+        }
+        continue
+      }
+
+      countsBySlug.set(key, { count: 1, label })
     }
   }
 
   return Object.fromEntries(
-    Array.from(countsBySlug.entries()).map(([slugValue, count]) => [slugValue, count])
+    Array.from(countsBySlug.values()).map((entry) => [entry.label, entry.count])
   )
 }
 

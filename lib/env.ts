@@ -108,8 +108,7 @@ export function loadEnv(): EnvContract {
   const base = parsed.data
   const isVercel = base.VERCEL === '1'
   const deployment = detectDeploymentMode(base.NODE_ENV, isVercel, base.VERCEL_ENV)
-  const includeDrafts =
-    deployment === 'local' && base.NODE_ENV !== 'production' && process.env.VERCEL !== '1'
+  const includeDrafts = deployment === 'local' && base.NODE_ENV !== 'production'
 
   const env = {
     ...base,
