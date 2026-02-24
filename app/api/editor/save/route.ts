@@ -100,6 +100,7 @@ export async function POST(req: Request) {
     },
     limit: 1,
     depth: 0,
+    overrideAccess: true,
   })
 
   if (existing.docs[0] && !overwrite) {
