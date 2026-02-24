@@ -1,9 +1,10 @@
 import rss from './rss.mjs'
-import { generateCmsArtifacts } from './generate-cms-artifacts.mjs'
+import { generateCmsArtifacts, getPublishedPosts } from './generate-cms-artifacts.mjs'
 
 async function postbuild() {
-  await rss()
-  await generateCmsArtifacts()
+  const posts = await getPublishedPosts()
+  await rss({ posts })
+  await generateCmsArtifacts({ posts })
 }
 
 postbuild()

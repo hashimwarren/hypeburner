@@ -9,12 +9,12 @@ import readingTime from 'reading-time'
 import siteMetadata from '../data/siteMetadata.js'
 
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
-const outputFolder = process.env.EXPORT ? 'out' : 'public'
-const POSTS_COLLECTION = process.env.PAYLOAD_POSTS_COLLECTION?.trim() || 'posts'
-const QUERY_LIMIT = Number(process.env.PAYLOAD_QUERY_LIMIT || '1000')
-
 loadDotenv({ path: path.resolve(rootDir, '.env.local') })
 loadDotenv({ path: path.resolve(rootDir, '.env') })
+const outputFolder = process.env.EXPORT ? 'out' : 'public'
+const POSTS_COLLECTION = process.env.PAYLOAD_POSTS_COLLECTION?.trim() || 'posts'
+const queryLimitValue = Number(process.env.PAYLOAD_QUERY_LIMIT || '1000')
+const QUERY_LIMIT = Number.isFinite(queryLimitValue) && queryLimitValue > 0 ? queryLimitValue : 1000
 
 function normalizeTags(value) {
   if (!Array.isArray(value)) return []
@@ -106,7 +106,7 @@ async function getPayloadClient() {
   return await payloadModule.getPayload({ config })
 }
 
-async function getPublishedPosts() {
+export async function getPublishedPosts() {
   let payloadClient
   try {
     payloadClient = await getPayloadClient()
@@ -127,10 +127,14 @@ async function getPublishedPosts() {
     const docs = (result?.docs || []).map(normalizePost).filter(Boolean)
     return sortByDateDesc(docs)
   } finally {
-    if (payloadClient && typeof payloadClient.destroy === 'function') {
-      await payloadClient.destroy()
-    } else if (payloadClient?.db && typeof payloadClient.db.destroy === 'function') {
-      await payloadClient.db.destroy()
+    try {
+      if (payloadClient && typeof payloadClient.destroy === 'function') {
+        await payloadClient.destroy()
+      } else if (payloadClient?.db && typeof payloadClient.db.destroy === 'function') {
+        await payloadClient.db.destroy()
+      }
+    } catch (error) {
+      console.warn('[artifacts] failed to close Payload connection cleanly', error)
     }
   }
 }
@@ -156,8 +160,8 @@ function resolveSearchPath() {
   return baseName || 'search.json'
 }
 
-export async function generateCmsArtifacts() {
-  const posts = await getPublishedPosts()
+export async function generateCmsArtifacts(options = {}) {
+  const posts = Array.isArray(options.posts) ? options.posts : await getPublishedPosts()
   const tagData = buildTagData(posts)
   const searchDocuments = posts
 

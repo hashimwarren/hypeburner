@@ -7,13 +7,13 @@ import { slug } from 'github-slugger'
 import { escape } from 'pliny/utils/htmlEscaper.js'
 import siteMetadata from '../data/siteMetadata.js'
 
-const outputFolder = process.env.EXPORT ? 'out' : 'public'
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
-const POSTS_COLLECTION = process.env.PAYLOAD_POSTS_COLLECTION?.trim() || 'posts'
-const QUERY_LIMIT = Number(process.env.PAYLOAD_QUERY_LIMIT || '1000')
-
 loadDotenv({ path: path.resolve(rootDir, '.env.local') })
 loadDotenv({ path: path.resolve(rootDir, '.env') })
+const outputFolder = process.env.EXPORT ? 'out' : 'public'
+const POSTS_COLLECTION = process.env.PAYLOAD_POSTS_COLLECTION?.trim() || 'posts'
+const queryLimitValue = Number(process.env.PAYLOAD_QUERY_LIMIT || '1000')
+const QUERY_LIMIT = Number.isFinite(queryLimitValue) && queryLimitValue > 0 ? queryLimitValue : 1000
 
 function sortPosts(posts) {
   return [...posts].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
@@ -73,7 +73,7 @@ async function getPayloadClient() {
   return await payloadModule.getPayload({ config })
 }
 
-async function getPublishedPosts() {
+export async function getPublishedPosts() {
   let payloadClient
   try {
     payloadClient = await getPayloadClient()
@@ -157,8 +157,8 @@ async function generateRSS(config, posts, page = 'feed.xml') {
   }
 }
 
-const rss = async () => {
-  const posts = await getPublishedPosts()
+const rss = async (options = {}) => {
+  const posts = Array.isArray(options.posts) ? options.posts : await getPublishedPosts()
   await generateRSS(siteMetadata, posts)
   console.log('RSS feed generated...')
 }

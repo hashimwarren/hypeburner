@@ -1,6 +1,7 @@
 import { cache } from 'react'
 import { slug } from 'github-slugger'
 import { getPayload } from 'payload'
+import siteMetadata from '@/data/siteMetadata'
 import { env } from '../env'
 import config from '../../payload.config'
 import type { SiteAuthor, SitePost } from '../../src/payload/types'
@@ -103,6 +104,20 @@ function normalizePost(value: Record<string, unknown>): SitePost {
 
 function byMostRecent(a: SitePost, b: SitePost): number {
   return new Date(b.date).getTime() - new Date(a.date).getTime()
+}
+
+function getFallbackAuthor(): CmsAuthor {
+  return {
+    slug: 'default',
+    name: String(siteMetadata.author || 'Hypeburner'),
+    occupation: 'Editor',
+    company: String(siteMetadata.title || 'Hypeburner'),
+    email: siteMetadata.email ? String(siteMetadata.email) : undefined,
+    twitter: siteMetadata.x ? String(siteMetadata.x) : undefined,
+    bluesky: siteMetadata.bluesky ? String(siteMetadata.bluesky) : undefined,
+    linkedin: siteMetadata.linkedin ? String(siteMetadata.linkedin) : undefined,
+    github: siteMetadata.github ? String(siteMetadata.github) : undefined,
+  }
 }
 
 export const getAllPosts = cache(async (): Promise<CmsPost[]> => {
@@ -220,6 +235,7 @@ export async function getDefaultAuthor(): Promise<CmsAuthor | null> {
     payload = await getPayloadClient()
     const bySlug = await payload.find({
       collection: env.PAYLOAD_AUTHORS_COLLECTION,
+      overrideAccess: true,
       where: {
         slug: {
           equals: 'default',
@@ -230,19 +246,15 @@ export async function getDefaultAuthor(): Promise<CmsAuthor | null> {
 
     const fallback = await payload.find({
       collection: env.PAYLOAD_AUTHORS_COLLECTION,
+      overrideAccess: true,
       limit: 1,
     })
 
     const author = bySlug?.docs?.[0] || fallback?.docs?.[0]
-    if (!author) return null
+    if (!author) return getFallbackAuthor()
     return normalizeAuthor(author as Record<string, unknown>)
   } catch (error) {
-    withCmsErrorContext(
-      '[cms] failed to load default author',
-      'getDefaultAuthor',
-      error,
-      env.PAYLOAD_AUTHORS_COLLECTION
-    )
+    return getFallbackAuthor()
   }
 }
 
