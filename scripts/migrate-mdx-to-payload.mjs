@@ -57,7 +57,7 @@ function inferCategory(slug) {
   return undefined
 }
 
-function markdownToLexical(markdown) {
+function markdownToLexicalFallback(markdown) {
   const normalized = String(markdown || '').replace(/\r\n/g, '\n').trim()
   const blocks = normalized ? normalized.split(/\n{2,}/) : ['']
 
@@ -91,6 +91,29 @@ function markdownToLexical(markdown) {
       type: 'root',
       version: 1,
     },
+  }
+}
+
+async function createMarkdownToLexicalConverter(config) {
+  if (!config) return markdownToLexicalFallback
+
+  try {
+    const lexicalModule = await importModule('@payloadcms/richtext-lexical')
+    const { convertMarkdownToLexical, editorConfigFactory } = lexicalModule
+
+    if (!convertMarkdownToLexical || !editorConfigFactory?.default) {
+      return markdownToLexicalFallback
+    }
+
+    const editorConfig = await editorConfigFactory.default({ config })
+    return (markdown) =>
+      convertMarkdownToLexical({
+        editorConfig,
+        markdown: String(markdown || '').replace(/\r\n/g, '\n').trim(),
+      })
+  } catch (error) {
+    console.warn('[migrate] failed to initialize markdown converter; using fallback rich text', error)
+    return markdownToLexicalFallback
   }
 }
 
@@ -193,13 +216,16 @@ async function requestRest(url, options = {}) {
 }
 
 async function createClient() {
+  const config = await resolvePayloadConfig()
+  const markdownToLexical = await createMarkdownToLexicalConverter(config)
+
   try {
     const payloadModule = await importModule('payload')
-    const config = await resolvePayloadConfig()
     if (payloadModule?.getPayload && config) {
       const localPayload = await payloadModule.getPayload({ config })
       return {
         mode: 'local',
+        markdownToLexical,
         async findBySlug(collection, slug) {
           const response = await localPayload.find({
             collection,
@@ -221,6 +247,7 @@ async function createClient() {
 
   return {
     mode: 'rest',
+    markdownToLexical,
     async findBySlug(collection, slug) {
       const url = new URL(`/api/${collection}`, getRestBaseUrl())
       url.searchParams.set('depth', '0')
@@ -297,7 +324,7 @@ async function run() {
       linkedin: asString(parsed.frontmatter.linkedin) || undefined,
       github: asString(parsed.frontmatter.github) || undefined,
       layout: asString(parsed.frontmatter.layout) || undefined,
-      bioRichText: markdownToLexical(parsed.content),
+      bioRichText: client.markdownToLexical(parsed.content),
     }
 
     const doc = await upsertBySlug(client, AUTHORS_COLLECTION, slug, data, apply)
@@ -347,7 +374,8 @@ async function run() {
       images: toImageArray(parsed.frontmatter.images),
       bibliography: asString(parsed.frontmatter.bibliography) || undefined,
       canonicalUrl: asString(parsed.frontmatter.canonicalUrl) || undefined,
-      content: markdownToLexical(parsed.content),
+      content: client.markdownToLexical(parsed.content),
+      sourceMarkdown: parsed.content,
       legacySourcePath: path.relative(rootDir, parsed.filePath).replace(/\\/g, '/'),
     }
 

@@ -6,14 +6,7 @@ import type { SiteAuthor, SitePost } from './types'
 const queryLimit = Number(process.env.PAYLOAD_QUERY_LIMIT || '1000')
 const includeDrafts = process.env.NODE_ENV !== 'production' && process.env.VERCEL !== '1'
 
-const getPayloadClient = cache(async () => {
-  try {
-    return await getPayload({ config })
-  } catch (error) {
-    console.warn('[payload] failed to initialize client', error)
-    return null
-  }
-})
+const getPayloadClient = cache(async () => await getPayload({ config }))
 
 function cleanLegacyPath(value: unknown, slug: string): string {
   const raw = String(value || '').trim()
@@ -102,7 +95,6 @@ function byMostRecent(a: SitePost, b: SitePost): number {
 
 export const getAllPosts = cache(async (): Promise<SitePost[]> => {
   const payload = await getPayloadClient()
-  if (!payload) return []
 
   try {
     const result = await payload.find({
@@ -117,8 +109,7 @@ export const getAllPosts = cache(async (): Promise<SitePost[]> => {
     )
     return posts.filter((post) => includeDrafts || !post.draft).sort(byMostRecent)
   } catch (error) {
-    console.warn('[payload] failed to query posts', error)
-    return []
+    throw new Error('[payload] failed to query posts', { cause: error })
   }
 })
 
