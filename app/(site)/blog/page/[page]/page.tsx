@@ -1,6 +1,6 @@
 import ListLayout from '@/layouts/ListLayoutWithTags'
 import { notFound } from 'next/navigation'
-import { getAllPosts, getTagCounts } from 'src/payload/queries'
+import { getAllPosts, getTagCounts } from 'lib/cms'
 
 const POSTS_PER_PAGE = 5
 

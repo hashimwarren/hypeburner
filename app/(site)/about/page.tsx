@@ -3,7 +3,7 @@ import type { ComponentProps } from 'react'
 import { notFound } from 'next/navigation'
 import AuthorLayout from '@/layouts/AuthorLayout'
 import { genPageMetadata } from 'app/seo'
-import { getDefaultAuthor } from 'src/payload/queries'
+import { getDefaultAuthor } from 'lib/cms'
 
 type LexicalRichTextData = ComponentProps<typeof RichText>['data']
 

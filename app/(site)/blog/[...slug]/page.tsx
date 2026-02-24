@@ -9,7 +9,7 @@ import type { ComponentProps } from 'react'
 import siteMetadata from '@/data/siteMetadata'
 import { notFound } from 'next/navigation'
 import { RichText } from '@payloadcms/richtext-lexical/react'
-import { getAllPostSlugs, getAllPosts, getPostBySlug } from 'src/payload/queries'
+import { getAllPostSlugs, getAllPosts, getPostBySlug } from 'lib/cms'
 import type { SiteAuthor } from 'src/payload/types'
 
 const defaultLayout = 'PostLayout'
@@ -106,17 +106,6 @@ export default async function Page(props: { params: Promise<{ slug: string[] }> 
   const layoutName = getLayoutName(post.layout)
   const renderedContent = (
     <>
-      {process.env.NODE_ENV !== 'production' && (
-        <div className="my-4">
-          <a
-            className="text-primary text-sm underline"
-            href={`/editor?slug=${encodeURIComponent(slug)}`}
-            rel="nofollow noopener noreferrer"
-          >
-            Edit this post
-          </a>
-        </div>
-      )}
       {post.content ? (
         <RichText data={post.content as LexicalRichTextData} />
       ) : (

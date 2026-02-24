@@ -9,6 +9,8 @@ import siteMetadata from '../data/siteMetadata.js'
 
 const outputFolder = process.env.EXPORT ? 'out' : 'public'
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
+const POSTS_COLLECTION = process.env.PAYLOAD_POSTS_COLLECTION?.trim() || 'posts'
+const QUERY_LIMIT = Number(process.env.PAYLOAD_QUERY_LIMIT || '1000')
 
 loadDotenv({ path: path.resolve(rootDir, '.env.local') })
 loadDotenv({ path: path.resolve(rootDir, '.env') })
@@ -76,7 +78,8 @@ async function getPublishedPosts() {
   try {
     payloadClient = await getPayloadClient()
     const result = await payloadClient.find({
-      collection: 'posts',
+      collection: POSTS_COLLECTION,
+      draft: false,
       where: {
         status: {
           equals: 'published',
@@ -84,13 +87,11 @@ async function getPublishedPosts() {
       },
       sort: '-publishedAt',
       depth: 0,
-      limit: Number(process.env.PAYLOAD_QUERY_LIMIT || '1000'),
+      limit: QUERY_LIMIT,
+      overrideAccess: true,
     })
 
     return sortPosts((result?.docs || []).map(normalizePost).filter(Boolean))
-  } catch (error) {
-    console.warn('[rss] failed to query published posts from Payload', error)
-    return []
   } finally {
     try {
       if (payloadClient && typeof payloadClient.destroy === 'function') {
@@ -133,8 +134,6 @@ const generateRss = (config, posts, page = 'feed.xml') => `
 `
 
 async function generateRSS(config, posts, page = 'feed.xml') {
-  if (posts.length === 0) return
-
   const sortedPublishedPosts = sortPosts(posts)
   const rss = generateRss(config, sortedPublishedPosts, page)
   writeFileSync(`./${outputFolder}/${page}`, rss)

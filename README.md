@@ -65,6 +65,30 @@ The following routes are explicit static routes using Payload-backed data so beh
 - `app/(site)/tags/[tag]/page/[page]/page.tsx`
 - `app/(site)/sitemap.ts`
 
+## CMS Runtime Policy
+
+Runtime content reads are CMS-first and archive markdown files are not used by public routes.
+
+- Runtime source: Payload via `lib/cms`.
+- Archive source: `data/` markdown remains in git for provenance and migration only.
+- Local markdown editor routes were removed; content operations should use Payload admin at `/cms`.
+
+## Migration Workflow
+
+Use the migration script for deterministic dry runs and idempotent apply runs.
+
+```bash
+yarn migrate:payload
+yarn migrate:payload:apply
+```
+
+Migration outputs:
+
+- `scripts/reports/migration-report.json`
+- `scripts/reports/migration-manual-fixes.json`
+
+`migrate:payload:apply` runs in strict mode and fails when unsupported MDX constructs require manual cleanup.
+
 ## CSP hardening
 
 `next.config.js` now centralizes script/connect/image/frame sources and keeps the policy explicit for the current known providers (`giscus`, `umami`, etc.).
@@ -84,3 +108,20 @@ If routes are protected and you need to simulate internal checks, ensure `VERCEL
 ```bash
 yarn deploy:smoke -- --url https://your-deployment-url --strict-protection
 ```
+
+## CMS Artifact Generation
+
+Tag/search artifacts are generated from published Payload content:
+
+- `app/tag-data.json`
+- `public/search.json` (or the configured `searchDocumentsPath` basename)
+
+Run manually:
+
+```bash
+yarn artifacts:cms
+```
+
+Build hooks:
+
+- `yarn build` runs `guard:runtime-cms`, Next build, then postbuild generation (`rss` + CMS artifacts).
