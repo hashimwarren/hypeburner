@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "skills": {
+    "dogfood": {
+      "source": "vercel-labs/agent-browser",
+      "sourceType": "github",
+      "computedHash": "6b29970dbf48224eaf88f66f1187c2fd61cf443336ee58e125d0bafd15fb3084"
+    }
+  }
+}
