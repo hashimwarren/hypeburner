@@ -9,6 +9,9 @@ const rootDir = process.cwd()
 loadDotenv({ path: path.resolve(rootDir, '.env.local') })
 loadDotenv({ path: path.resolve(rootDir, '.env') })
 
+const AUTHORS_COLLECTION = process.env.PAYLOAD_AUTHORS_COLLECTION?.trim() || 'authors'
+const POSTS_COLLECTION = process.env.PAYLOAD_POSTS_COLLECTION?.trim() || 'posts'
+
 function hasFlag(flag) {
   return process.argv.slice(2).includes(flag)
 }
@@ -140,7 +143,7 @@ async function run() {
 
     const author = await upsertByField(
       payload,
-      'authors',
+      AUTHORS_COLLECTION,
       'slug',
       'default',
       {
@@ -154,7 +157,7 @@ async function run() {
 
     await upsertByField(
       payload,
-      'posts',
+      POSTS_COLLECTION,
       'slug',
       'newsletter/launch-fixture',
       {
@@ -178,7 +181,7 @@ async function run() {
 
     await upsertByField(
       payload,
-      'posts',
+      POSTS_COLLECTION,
       'slug',
       'news/platform-fixture',
       {

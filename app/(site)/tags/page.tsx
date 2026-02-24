@@ -4,6 +4,7 @@ import { slug } from 'github-slugger'
 import { genPageMetadata } from 'app/seo'
 import { getTagCounts } from 'src/payload/queries'
 
+export const dynamic = 'force-static'
 export const metadata = genPageMetadata({ title: 'Tags', description: 'Things I blog about' })
 
 export default async function Page() {

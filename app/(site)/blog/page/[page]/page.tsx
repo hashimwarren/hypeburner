@@ -4,6 +4,8 @@ import { getAllPosts, getTagCounts } from 'src/payload/queries'
 
 const POSTS_PER_PAGE = 5
 
+export const dynamic = 'force-static'
+
 export const generateStaticParams = async () => {
   const posts = await getAllPosts()
   const totalPages = Math.ceil(posts.length / POSTS_PER_PAGE)

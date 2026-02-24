@@ -30,6 +30,8 @@ function getAuthorDetails(authors: SiteAuthor[]): SiteAuthor[] {
   ]
 }
 
+export const dynamic = 'force-static'
+
 export async function generateMetadata(props: {
   params: Promise<{ slug: string[] }>
 }): Promise<Metadata | undefined> {
@@ -43,9 +45,9 @@ export async function generateMetadata(props: {
   const modifiedAt = new Date(post.lastmod || post.date).toISOString()
   const authors = authorDetails.map((author) => author.name)
   const imageList = post.images?.length ? post.images : [siteMetadata.socialBanner]
-  const ogImages = imageList.map((img) => ({
-    url: img.includes('http') ? img : `${siteMetadata.siteUrl}${img}`,
-  }))
+  const ogImages = imageList.map((img) =>
+    img.includes('http') ? img : `${siteMetadata.siteUrl}${img}`
+  )
 
   return {
     title: post.title,
