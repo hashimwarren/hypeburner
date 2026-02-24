@@ -1,8 +1,9 @@
-import 'dotenv/config'
+import { mkdtempSync, rmSync } from 'fs'
 import { readdir, readFile } from 'fs/promises'
 import path from 'path'
-import { createRequire } from 'module'
 import { pathToFileURL } from 'url'
+import { build } from 'esbuild'
+import { config as loadDotenv } from 'dotenv'
 import matter from 'gray-matter'
 
 const AUTHORS_COLLECTION = process.env.PAYLOAD_AUTHORS_COLLECTION?.trim() || 'authors'
@@ -11,9 +12,11 @@ const POSTS_COLLECTION = process.env.PAYLOAD_POSTS_COLLECTION?.trim() || 'posts'
 const rootDir = process.cwd()
 const authorsDir = path.join(rootDir, 'data', 'authors')
 const blogDir = path.join(rootDir, 'data', 'blog')
-const require = createRequire(import.meta.url)
 
 const importModule = (specifier) => Function('s', 'return import(s)')(specifier)
+
+loadDotenv({ path: path.resolve(rootDir, '.env.local') })
+loadDotenv({ path: path.resolve(rootDir, '.env') })
 
 function hasFlag(flag) {
   return process.argv.slice(2).includes(flag)
@@ -143,6 +146,30 @@ async function parseMdxFile(filePath) {
 }
 
 async function resolvePayloadConfig() {
+  async function importTsConfigModule(candidate) {
+    const resolvedPath = path.isAbsolute(candidate) ? candidate : path.resolve(rootDir, candidate)
+    const tempDir = mkdtempSync(path.join(rootDir, '.tmp-payload-config-'))
+    const outputPath = path.join(tempDir, 'payload.config.mjs')
+
+    try {
+      await build({
+        entryPoints: [resolvedPath],
+        outfile: outputPath,
+        bundle: true,
+        packages: 'external',
+        platform: 'node',
+        format: 'esm',
+        target: 'node20',
+        sourcemap: false,
+      })
+
+      const importedModule = await importModule(pathToFileURL(outputPath).href)
+      return importedModule?.default || importedModule
+    } finally {
+      rmSync(tempDir, { recursive: true, force: true })
+    }
+  }
+
   const candidates = []
   if (process.env.PAYLOAD_CONFIG_PATH?.trim()) candidates.push(process.env.PAYLOAD_CONFIG_PATH.trim())
   candidates.push(
@@ -154,21 +181,12 @@ async function resolvePayloadConfig() {
   for (const candidate of candidates) {
     try {
       if (candidate.endsWith('.ts')) {
-        const { register } = require('esbuild-register/dist/node')
-        const { unregister } = register({
-          hookIgnoreNodeModules: true,
-          target: 'es2020',
-        })
-        try {
-          const importedModule = require(candidate)
-          return importedModule?.default || importedModule
-        } finally {
-          unregister()
-        }
+        return await importTsConfigModule(candidate)
       }
 
-      const importedModule =
-        candidate.startsWith('@') ? await importModule(candidate) : await importModule(pathToFileURL(candidate).href)
+      const importedModule = candidate.startsWith('@')
+        ? await importModule(candidate)
+        : await importModule(pathToFileURL(path.isAbsolute(candidate) ? candidate : path.resolve(rootDir, candidate)).href)
       return importedModule?.default || importedModule
     } catch {
       continue
@@ -178,54 +196,30 @@ async function resolvePayloadConfig() {
   return null
 }
 
-function getRestBaseUrl() {
-  return (
-    process.env.PAYLOAD_LOCAL_API_URL?.trim() ||
-    process.env.NEXT_PUBLIC_SITE_URL?.trim() ||
-    process.env.SITE_URL?.trim() ||
-    'http://localhost:3000'
-  ).replace(/\/+$/, '')
-}
-
-async function requestRest(url, options = {}) {
-  const headers = {
-    'Content-Type': 'application/json',
-    ...(options.headers || {}),
-  }
-
-  if (process.env.PAYLOAD_API_KEY?.trim()) {
-    headers.Authorization = `users API-Key ${process.env.PAYLOAD_API_KEY.trim()}`
-  }
-
-  let response
-  try {
-    response = await fetch(url, { ...options, headers })
-  } catch (error) {
-    throw new Error(
-      `Payload REST request failed to connect (${url}). Start the app server or set PAYLOAD_LOCAL_API_URL to a reachable CMS host.`,
-      { cause: error }
-    )
-  }
-  if (!response.ok) {
-    const body = await response.text()
-    throw new Error(`Payload REST request failed (${response.status}): ${body}`)
-  }
-
-  if (response.status === 204) return null
-  return response.json()
-}
-
 async function createClient() {
   const config = await resolvePayloadConfig()
+  if (!config) {
+    throw new Error(
+      '[migrate] Unable to resolve Payload config. Set PAYLOAD_CONFIG_PATH or ensure payload.config.ts is loadable.'
+    )
+  }
+
   const markdownToLexical = await createMarkdownToLexicalConverter(config)
 
   try {
     const payloadModule = await importModule('payload')
-    if (payloadModule?.getPayload && config) {
+    if (payloadModule?.getPayload) {
       const localPayload = await payloadModule.getPayload({ config })
       return {
         mode: 'local',
         markdownToLexical,
+        async destroy() {
+          if (typeof localPayload.destroy === 'function') {
+            await localPayload.destroy()
+          } else if (localPayload?.db && typeof localPayload.db.destroy === 'function') {
+            await localPayload.db.destroy()
+          }
+        },
         async findBySlug(collection, slug) {
           const response = await localPayload.find({
             collection,
@@ -243,31 +237,9 @@ async function createClient() {
         },
       }
     }
-  } catch {}
-
-  return {
-    mode: 'rest',
-    markdownToLexical,
-    async findBySlug(collection, slug) {
-      const url = new URL(`/api/${collection}`, getRestBaseUrl())
-      url.searchParams.set('depth', '0')
-      url.searchParams.set('limit', '1')
-      url.searchParams.set('where[slug][equals]', slug)
-      const payload = await requestRest(url.toString())
-      return payload?.docs?.[0] || null
-    },
-    async create(collection, data) {
-      return requestRest(`${getRestBaseUrl()}/api/${collection}`, {
-        method: 'POST',
-        body: JSON.stringify(data),
-      })
-    },
-    async update(collection, id, data) {
-      return requestRest(`${getRestBaseUrl()}/api/${collection}/${id}`, {
-        method: 'PATCH',
-        body: JSON.stringify(data),
-      })
-    },
+    throw new Error('[migrate] payload.getPayload is unavailable in this environment.')
+  } catch (error) {
+    throw new Error('[migrate] Failed to initialize local Payload client.', { cause: error })
   }
 }
 
@@ -303,87 +275,97 @@ async function run() {
 
   const apply = hasFlag('--apply')
   const client = await createClient()
-  console.log(`Migration mode: ${apply ? 'apply' : 'dry-run'} (transport: ${client.mode})`)
+  try {
+    console.log(`Migration mode: ${apply ? 'apply' : 'dry-run'} (transport: ${client.mode})`)
 
-  const authorFiles = await listMdxFiles(authorsDir)
-  const postFiles = await listMdxFiles(blogDir)
-  const authorIdBySlug = new Map()
+    const authorFiles = await listMdxFiles(authorsDir)
+    const postFiles = await listMdxFiles(blogDir)
+    const authorIdBySlug = new Map()
 
-  for (const filePath of authorFiles) {
-    const parsed = await parseMdxFile(filePath)
-    const slug = slugFromFile(authorsDir, parsed.filePath)
-    const data = {
-      name: asString(parsed.frontmatter.name) || slug,
-      slug,
-      avatar: asString(parsed.frontmatter.avatar) || undefined,
-      occupation: asString(parsed.frontmatter.occupation) || undefined,
-      company: asString(parsed.frontmatter.company) || undefined,
-      email: asString(parsed.frontmatter.email) || undefined,
-      twitter: asString(parsed.frontmatter.twitter) || undefined,
-      bluesky: asString(parsed.frontmatter.bluesky) || undefined,
-      linkedin: asString(parsed.frontmatter.linkedin) || undefined,
-      github: asString(parsed.frontmatter.github) || undefined,
-      layout: asString(parsed.frontmatter.layout) || undefined,
-      bioRichText: client.markdownToLexical(parsed.content),
-    }
-
-    const doc = await upsertBySlug(client, AUTHORS_COLLECTION, slug, data, apply)
-    if (doc?.id) {
-      authorIdBySlug.set(slug, String(doc.id))
-    }
-  }
-
-  for (const filePath of postFiles) {
-    const parsed = await parseMdxFile(filePath)
-    const slug = slugFromFile(blogDir, parsed.filePath)
-
-    const authorSlugs = toStringArray(parsed.frontmatter.authors)
-    const resolvedAuthorIds = []
-    for (const authorSlug of authorSlugs.length ? authorSlugs : ['default']) {
-      let authorId = authorIdBySlug.get(authorSlug)
-      if (!authorId) {
-        const doc = await client.findBySlug(AUTHORS_COLLECTION, authorSlug)
-        authorId = doc?.id || doc?.doc?.id
-        if (authorId) authorIdBySlug.set(authorSlug, String(authorId))
+    for (const filePath of authorFiles) {
+      const parsed = await parseMdxFile(filePath)
+      const slug = slugFromFile(authorsDir, parsed.filePath)
+      const data = {
+        name: asString(parsed.frontmatter.name) || slug,
+        slug,
+        avatar: asString(parsed.frontmatter.avatar) || undefined,
+        occupation: asString(parsed.frontmatter.occupation) || undefined,
+        company: asString(parsed.frontmatter.company) || undefined,
+        email: asString(parsed.frontmatter.email) || undefined,
+        twitter: asString(parsed.frontmatter.twitter) || undefined,
+        bluesky: asString(parsed.frontmatter.bluesky) || undefined,
+        linkedin: asString(parsed.frontmatter.linkedin) || undefined,
+        github: asString(parsed.frontmatter.github) || undefined,
+        layout: asString(parsed.frontmatter.layout) || undefined,
+        bioRichText: client.markdownToLexical(parsed.content),
       }
-      if (authorId) {
-        if (typeof authorId === 'string' && /^\d+$/.test(authorId)) {
-          resolvedAuthorIds.push(Number(authorId))
-        } else {
-          resolvedAuthorIds.push(authorId)
+
+      const doc = await upsertBySlug(client, AUTHORS_COLLECTION, slug, data, apply)
+      if (doc?.id) {
+        authorIdBySlug.set(slug, String(doc.id))
+      }
+    }
+
+    for (const filePath of postFiles) {
+      const parsed = await parseMdxFile(filePath)
+      const slug = slugFromFile(blogDir, parsed.filePath)
+
+      const authorSlugs = toStringArray(parsed.frontmatter.authors)
+      const resolvedAuthorIds = []
+      for (const authorSlug of authorSlugs.length ? authorSlugs : ['default']) {
+        let authorId = authorIdBySlug.get(authorSlug)
+        if (!authorId) {
+          const doc = await client.findBySlug(AUTHORS_COLLECTION, authorSlug)
+          authorId = doc?.id || doc?.doc?.id
+          if (authorId) authorIdBySlug.set(authorSlug, String(authorId))
+        }
+        if (authorId) {
+          if (typeof authorId === 'string' && /^\d+$/.test(authorId)) {
+            resolvedAuthorIds.push(Number(authorId))
+          } else {
+            resolvedAuthorIds.push(authorId)
+          }
         }
       }
-    }
 
-    if (resolvedAuthorIds.length === 0) {
-      console.warn(`[skip] ${slug}: no matching author`)
-      continue
-    }
+      if (resolvedAuthorIds.length === 0) {
+        console.warn(`[skip] ${slug}: no matching author`)
+        continue
+      }
 
-    const data = {
-      title: asString(parsed.frontmatter.title) || slug,
-      slug,
-      status: asBoolean(parsed.frontmatter.draft) ? 'draft' : 'published',
-      summary: asString(parsed.frontmatter.summary) || undefined,
-      publishedAt: asDate(parsed.frontmatter.date),
-      lastmod: asDate(parsed.frontmatter.lastmod),
-      category: inferCategory(slug),
-      tags: toStringArray(parsed.frontmatter.tags),
-      authors: resolvedAuthorIds,
-      layout: asString(parsed.frontmatter.layout) || 'PostLayout',
-      images: toImageArray(parsed.frontmatter.images),
-      bibliography: asString(parsed.frontmatter.bibliography) || undefined,
-      canonicalUrl: asString(parsed.frontmatter.canonicalUrl) || undefined,
-      content: client.markdownToLexical(parsed.content),
-      sourceMarkdown: parsed.content,
-      legacySourcePath: path.relative(rootDir, parsed.filePath).replace(/\\/g, '/'),
-    }
+      const data = {
+        title: asString(parsed.frontmatter.title) || slug,
+        slug,
+        status: asBoolean(parsed.frontmatter.draft) ? 'draft' : 'published',
+        summary: asString(parsed.frontmatter.summary) || undefined,
+        publishedAt: asDate(parsed.frontmatter.date),
+        lastmod: asDate(parsed.frontmatter.lastmod),
+        category: inferCategory(slug),
+        tags: toStringArray(parsed.frontmatter.tags),
+        authors: resolvedAuthorIds,
+        layout: asString(parsed.frontmatter.layout) || 'PostLayout',
+        images: toImageArray(parsed.frontmatter.images),
+        bibliography: asString(parsed.frontmatter.bibliography) || undefined,
+        canonicalUrl: asString(parsed.frontmatter.canonicalUrl) || undefined,
+        content: client.markdownToLexical(parsed.content),
+        sourceMarkdown: parsed.content,
+        legacySourcePath: path.relative(rootDir, parsed.filePath).replace(/\\/g, '/'),
+      }
 
-    await upsertBySlug(client, POSTS_COLLECTION, slug, data, apply)
+      await upsertBySlug(client, POSTS_COLLECTION, slug, data, apply)
+    }
+  } finally {
+    if (typeof client.destroy === 'function') {
+      await client.destroy()
+    }
   }
 }
 
-run().catch((error) => {
-  console.error(error)
-  process.exitCode = 1
-})
+run()
+  .then(() => {
+    process.exit(0)
+  })
+  .catch((error) => {
+    console.error(error)
+    process.exit(1)
+  })

@@ -99,6 +99,7 @@ export const getAllPosts = cache(async (): Promise<SitePost[]> => {
   try {
     const result = await payload.find({
       collection: 'posts',
+      draft: includeDrafts,
       depth: 2,
       limit: queryLimit,
       sort: '-publishedAt',
@@ -141,6 +142,7 @@ export const getPostBySlug = cache(async (slug: string): Promise<SitePost | null
   try {
     const result = await payload.find({
       collection: 'posts',
+      draft: includeDrafts,
       depth: 2,
       where: {
         slug: {

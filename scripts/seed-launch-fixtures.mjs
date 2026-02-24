@@ -1,9 +1,13 @@
-import 'dotenv/config'
+import { mkdtempSync, rmSync } from 'fs'
 import path from 'path'
-import { createRequire } from 'module'
+import { pathToFileURL } from 'url'
+import { build } from 'esbuild'
+import { config as loadDotenv } from 'dotenv'
 
-const require = createRequire(import.meta.url)
 const rootDir = process.cwd()
+
+loadDotenv({ path: path.resolve(rootDir, '.env.local') })
+loadDotenv({ path: path.resolve(rootDir, '.env') })
 
 function hasFlag(flag) {
   return process.argv.slice(2).includes(flag)
@@ -45,19 +49,27 @@ function markdownToLexical(markdown) {
 }
 
 async function createPayloadClient() {
-  const { register } = require('esbuild-register/dist/node')
-  const { unregister } = register({
-    hookIgnoreNodeModules: true,
-    target: 'es2020',
-  })
+  const tempDir = mkdtempSync(path.join(rootDir, '.tmp-payload-config-'))
+  const outputPath = path.join(tempDir, 'payload.config.mjs')
 
   try {
-    const configModule = require(path.resolve(rootDir, 'payload.config.ts'))
+    await build({
+      entryPoints: [path.resolve(rootDir, 'payload.config.ts')],
+      outfile: outputPath,
+      bundle: true,
+      packages: 'external',
+      platform: 'node',
+      format: 'esm',
+      target: 'node20',
+      sourcemap: false,
+    })
+
+    const configModule = await import(pathToFileURL(outputPath).href)
     const config = configModule?.default || configModule
     const payloadModule = await import('payload')
     return await payloadModule.getPayload({ config })
   } finally {
-    unregister()
+    rmSync(tempDir, { recursive: true, force: true })
   }
 }
 
@@ -109,136 +121,147 @@ async function run() {
   }
 
   const payload = await createPayloadClient()
-  const now = new Date().toISOString()
+  try {
+    const now = new Date().toISOString()
 
-  const user = await upsertByField(
-    payload,
-    'users',
-    'email',
-    'launch-admin@hypeburner.com',
-    {
-      email: 'launch-admin@hypeburner.com',
-      password: 'ChangeMe123!',
-      name: 'Launch Admin',
-      role: 'admin',
-    },
-    apply
-  )
+    const user = await upsertByField(
+      payload,
+      'users',
+      'email',
+      'launch-admin@hypeburner.com',
+      {
+        email: 'launch-admin@hypeburner.com',
+        password: 'ChangeMe123!',
+        name: 'Launch Admin',
+        role: 'admin',
+      },
+      apply
+    )
 
-  const author = await upsertByField(
-    payload,
-    'authors',
-    'slug',
-    'default',
-    {
-      name: 'Launch Author',
-      slug: 'default',
-      bioRichText: markdownToLexical('Launch fixture author profile.'),
-      email: 'editor@hypeburner.com',
-    },
-    apply
-  )
+    const author = await upsertByField(
+      payload,
+      'authors',
+      'slug',
+      'default',
+      {
+        name: 'Launch Author',
+        slug: 'default',
+        bioRichText: markdownToLexical('Launch fixture author profile.'),
+        email: 'editor@hypeburner.com',
+      },
+      apply
+    )
 
-  await upsertByField(
-    payload,
-    'posts',
-    'slug',
-    'newsletter/launch-fixture',
-    {
-      title: 'Launch Fixture Newsletter',
-      slug: 'newsletter/launch-fixture',
-      status: 'published',
-      summary: 'Fixture post for staging smoke tests.',
-      publishedAt: now,
-      lastmod: now,
-      category: 'newsletter',
-      tags: ['launch', 'fixture'],
-      authors: [author.id],
-      layout: 'PostLayout',
-      content: markdownToLexical('This is the launch fixture newsletter post body.'),
-      sourceMarkdown: 'This is the launch fixture newsletter post body.',
-      legacySourcePath: 'data/blog/newsletter/launch-fixture.mdx',
-    },
-    apply
-  )
+    await upsertByField(
+      payload,
+      'posts',
+      'slug',
+      'newsletter/launch-fixture',
+      {
+        title: 'Launch Fixture Newsletter',
+        slug: 'newsletter/launch-fixture',
+        status: 'published',
+        summary: 'Fixture post for staging smoke tests.',
+        publishedAt: now,
+        lastmod: now,
+        category: 'newsletter',
+        tags: ['launch', 'fixture'],
+        authors: [author.id],
+        layout: 'PostLayout',
+        content: markdownToLexical('This is the launch fixture newsletter post body.'),
+        sourceMarkdown: 'This is the launch fixture newsletter post body.',
+        legacySourcePath: 'data/blog/newsletter/launch-fixture.mdx',
+      },
+      apply
+    )
 
-  await upsertByField(
-    payload,
-    'posts',
-    'slug',
-    'news/platform-fixture',
-    {
-      title: 'Platform Fixture Update',
-      slug: 'news/platform-fixture',
-      status: 'draft',
-      summary: 'Draft fixture post for editor checks.',
-      publishedAt: now,
-      lastmod: now,
-      category: 'news',
-      tags: ['platform', 'fixture'],
-      authors: [author.id],
-      layout: 'PostLayout',
-      content: markdownToLexical('This is the draft fixture post body.'),
-      sourceMarkdown: 'This is the draft fixture post body.',
-      legacySourcePath: 'data/blog/news/platform-fixture.mdx',
-    },
-    apply
-  )
+    await upsertByField(
+      payload,
+      'posts',
+      'slug',
+      'news/platform-fixture',
+      {
+        title: 'Platform Fixture Update',
+        slug: 'news/platform-fixture',
+        status: 'draft',
+        summary: 'Draft fixture post for editor checks.',
+        publishedAt: now,
+        lastmod: now,
+        category: 'news',
+        tags: ['platform', 'fixture'],
+        authors: [author.id],
+        layout: 'PostLayout',
+        content: markdownToLexical('This is the draft fixture post body.'),
+        sourceMarkdown: 'This is the draft fixture post body.',
+        legacySourcePath: 'data/blog/news/platform-fixture.mdx',
+      },
+      apply
+    )
 
-  const customer = await upsertByField(
-    payload,
-    'polarCustomers',
-    'polarCustomerId',
-    'fixture_customer_001',
-    {
-      polarCustomerId: 'fixture_customer_001',
-      email: 'fixture-customer@hypeburner.com',
-      name: 'Fixture Customer',
-      user: user.id,
-      metadata: { source: 'seed-launch-fixtures' },
-    },
-    apply
-  )
+    const customer = await upsertByField(
+      payload,
+      'polarCustomers',
+      'polarCustomerId',
+      'fixture_customer_001',
+      {
+        polarCustomerId: 'fixture_customer_001',
+        email: 'fixture-customer@hypeburner.com',
+        name: 'Fixture Customer',
+        user: user.id,
+        metadata: { source: 'seed-launch-fixtures' },
+      },
+      apply
+    )
 
-  await upsertByField(
-    payload,
-    'polarSubscriptions',
-    'polarSubscriptionId',
-    'fixture_subscription_001',
-    {
-      polarSubscriptionId: 'fixture_subscription_001',
-      customer: customer.id,
-      user: user.id,
-      productId: process.env.POLAR_PRODUCT_ID_MONTHLY || 'fixture_product_monthly',
-      interval: 'monthly',
-      status: 'active',
-      currentPeriodStart: now,
-      currentPeriodEnd: now,
-      cancelAtPeriodEnd: false,
-      metadata: { source: 'seed-launch-fixtures' },
-    },
-    apply
-  )
+    await upsertByField(
+      payload,
+      'polarSubscriptions',
+      'polarSubscriptionId',
+      'fixture_subscription_001',
+      {
+        polarSubscriptionId: 'fixture_subscription_001',
+        customer: customer.id,
+        user: user.id,
+        productId: process.env.POLAR_PRODUCT_ID_MONTHLY || 'fixture_product_monthly',
+        interval: 'monthly',
+        status: 'active',
+        currentPeriodStart: now,
+        currentPeriodEnd: now,
+        cancelAtPeriodEnd: false,
+        metadata: { source: 'seed-launch-fixtures' },
+      },
+      apply
+    )
 
-  await upsertByField(
-    payload,
-    'polarWebhookEvents',
-    'webhookId',
-    'fixture_webhook_001',
-    {
-      webhookId: 'fixture_webhook_001',
-      type: 'subscription.created',
-      receivedAt: now,
-      processed: true,
-      processedAt: now,
-      payload: { source: 'seed-launch-fixtures', id: 'fixture_webhook_001' },
-    },
-    apply
-  )
+    await upsertByField(
+      payload,
+      'polarWebhookEvents',
+      'webhookId',
+      'fixture_webhook_001',
+      {
+        webhookId: 'fixture_webhook_001',
+        type: 'subscription.created',
+        receivedAt: now,
+        processed: true,
+        processedAt: now,
+        payload: { source: 'seed-launch-fixtures', id: 'fixture_webhook_001' },
+      },
+      apply
+    )
+  } finally {
+    if (typeof payload.destroy === 'function') {
+      await payload.destroy()
+    } else if (payload?.db && typeof payload.db.destroy === 'function') {
+      await payload.db.destroy()
+    }
+  }
 }
 
-run().catch((error) => {
-  console.error(error)
-  process.exitCode = 1
-})
-
+run()
+  .then(() => {
+    process.exit(0)
+  })
+  .catch((error) => {
+    console.error(error)
+    process.exit(1)
+  })
