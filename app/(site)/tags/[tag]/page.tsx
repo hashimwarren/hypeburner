@@ -7,6 +7,8 @@ import { getAllPosts, getTagCounts } from 'src/payload/queries'
 
 const POSTS_PER_PAGE = 5
 
+export const dynamic = 'force-static'
+
 export async function generateMetadata(props: {
   params: Promise<{ tag: string }>
 }): Promise<Metadata> {

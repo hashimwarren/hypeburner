@@ -5,6 +5,8 @@ import { getAllPosts, getTagCounts } from 'src/payload/queries'
 
 const POSTS_PER_PAGE = 5
 
+export const dynamic = 'force-static'
+
 export const generateStaticParams = async () => {
   const tagCounts = await getTagCounts()
   return Object.keys(tagCounts).flatMap((tag) => {

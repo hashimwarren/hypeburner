@@ -1,11 +1,12 @@
 import { cache } from 'react'
 import { slug } from 'github-slugger'
 import { getPayload } from 'payload'
+import { env } from '../../lib/env'
 import config from '../../payload.config'
 import type { SiteAuthor, SitePost } from './types'
 
-const queryLimit = Number(process.env.PAYLOAD_QUERY_LIMIT || '1000')
-const includeDrafts = process.env.NODE_ENV !== 'production' && process.env.VERCEL !== '1'
+const queryLimit = env.PAYLOAD_QUERY_LIMIT
+const includeDrafts = env.includeDrafts
 
 const getPayloadClient = cache(async () => await getPayload({ config }))
 
@@ -97,23 +98,20 @@ function byMostRecent(a: SitePost, b: SitePost): number {
 export const getAllPosts = cache(async (): Promise<SitePost[]> => {
   const payload = await getPayloadClient()
 
-  try {
-    const result = await payload.find({
-      collection: 'posts',
-      draft: includeDrafts,
-      overrideAccess: true,
-      depth: 2,
-      limit: queryLimit,
-      sort: '-publishedAt',
-    })
+  const result = await payload.find({
+    collection: env.PAYLOAD_POSTS_COLLECTION,
+    draft: includeDrafts,
+    overrideAccess: true,
+    depth: 2,
+    limit: queryLimit,
+    sort: '-publishedAt',
+  })
 
-    const posts = (result?.docs || []).map((doc: unknown) =>
-      normalizePost(doc as Record<string, unknown>)
-    )
-    return posts.filter((post) => includeDrafts || !post.draft).sort(byMostRecent)
-  } catch (error) {
-    throw new Error('[payload] failed to query posts', { cause: error })
-  }
+  const posts = (result?.docs || []).map((doc: unknown) =>
+    normalizePost(doc as Record<string, unknown>)
+  )
+
+  return posts.filter((post) => includeDrafts || !post.draft).sort(byMostRecent)
 })
 
 export async function getHomePosts(limit = 5): Promise<SitePost[]> {
@@ -141,54 +139,42 @@ export const getPostBySlug = cache(async (slug: string): Promise<SitePost | null
   const payload = await getPayloadClient()
   if (!payload) return null
 
-  try {
-    const result = await payload.find({
-      collection: 'posts',
-      draft: includeDrafts,
-      overrideAccess: true,
-      depth: 2,
-      where: {
-        slug: {
-          equals: slug,
-        },
+  const result = await payload.find({
+    collection: env.PAYLOAD_POSTS_COLLECTION,
+    draft: includeDrafts,
+    overrideAccess: true,
+    depth: 2,
+    where: {
+      slug: {
+        equals: slug,
       },
-      limit: 1,
-    })
+    },
+    limit: 1,
+  })
 
-    const doc = result?.docs?.[0]
-    if (!doc) return null
-    const post = normalizePost(doc as Record<string, unknown>)
+  const doc = result?.docs?.[0]
+  if (!doc) return null
+  const post = normalizePost(doc as Record<string, unknown>)
 
-    if (!includeDrafts && post.draft) return null
-    return post
-  } catch (error) {
-    console.warn('[payload] failed to query post by slug', error)
-    return null
-  }
+  if (!includeDrafts && post.draft) return null
+  return post
 })
 
 export async function getTagCounts(): Promise<Record<string, number>> {
   const posts = await getAllPosts()
-  const countsBySlug = new Map<string, { count: number; label: string }>()
+  const countsBySlug = new Map<string, number>()
   for (const post of posts) {
     for (const tag of post.tags) {
-      const label = String(tag || '').trim()
-      if (!label) continue
-
-      const key = slug(label)
+      const key = slug(tag)
       if (!key) continue
 
-      const existing = countsBySlug.get(key)
-      if (existing) {
-        existing.count += 1
-      } else {
-        countsBySlug.set(key, { count: 1, label })
-      }
+      const current = countsBySlug.get(key)
+      countsBySlug.set(key, (current || 0) + 1)
     }
   }
 
   return Object.fromEntries(
-    Array.from(countsBySlug.values()).map((entry) => [entry.label, entry.count])
+    Array.from(countsBySlug.entries()).map(([slugValue, count]) => [slugValue, count])
   )
 }
 
@@ -196,27 +182,22 @@ export async function getDefaultAuthor(): Promise<SiteAuthor | null> {
   const payload = await getPayloadClient()
   if (!payload) return null
 
-  try {
-    const bySlug = await payload.find({
-      collection: 'authors',
-      where: {
-        slug: {
-          equals: 'default',
-        },
+  const bySlug = await payload.find({
+    collection: env.PAYLOAD_AUTHORS_COLLECTION,
+    where: {
+      slug: {
+        equals: 'default',
       },
-      limit: 1,
-    })
+    },
+    limit: 1,
+  })
 
-    const fallback = await payload.find({
-      collection: 'authors',
-      limit: 1,
-    })
+  const fallback = await payload.find({
+    collection: env.PAYLOAD_AUTHORS_COLLECTION,
+    limit: 1,
+  })
 
-    const author = bySlug?.docs?.[0] || fallback?.docs?.[0]
-    if (!author) return null
-    return normalizeAuthor(author as Record<string, unknown>)
-  } catch (error) {
-    console.warn('[payload] failed to query default author', error)
-    return null
-  }
+  const author = bySlug?.docs?.[0] || fallback?.docs?.[0]
+  if (!author) return null
+  return normalizeAuthor(author as Record<string, unknown>)
 }

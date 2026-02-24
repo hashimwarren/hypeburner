@@ -5,8 +5,10 @@ import AuthorLayout from '@/layouts/AuthorLayout'
 import { genPageMetadata } from 'app/seo'
 import { getDefaultAuthor } from 'src/payload/queries'
 
-export const metadata = genPageMetadata({ title: 'About' })
 type LexicalRichTextData = ComponentProps<typeof RichText>['data']
+
+export const dynamic = 'force-static'
+export const metadata = genPageMetadata({ title: 'About' })
 
 export default async function Page() {
   const author = await getDefaultAuthor()

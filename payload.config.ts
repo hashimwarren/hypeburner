@@ -1,6 +1,7 @@
-import 'dotenv/config'
-import path from 'path'
+import { env } from './lib/env'
 import { fileURLToPath } from 'url'
+import path from 'path'
+import 'dotenv/config'
 import { postgresAdapter } from '@payloadcms/db-postgres'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import { buildConfig } from 'payload'
@@ -13,11 +14,6 @@ import { Users } from './src/collections/Users'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
-const payloadSecret = process.env.PAYLOAD_SECRET?.trim()
-
-if (!payloadSecret) {
-  throw new Error('PAYLOAD_SECRET is required for Payload config.')
-}
 
 export default buildConfig({
   routes: {
@@ -33,12 +29,12 @@ export default buildConfig({
   collections: [Users, Authors, Posts, PolarCustomers, PolarSubscriptions, PolarWebhookEvents],
   db: postgresAdapter({
     pool: {
-      connectionString: process.env.DATABASE_URI || '',
+      connectionString: env.DATABASE_URI,
     },
     migrationDir: path.resolve(dirname, 'migrations'),
   }),
   editor: lexicalEditor(),
-  secret: payloadSecret,
+  secret: env.PAYLOAD_SECRET,
   typescript: {
     outputFile: path.resolve(dirname, 'payload-types.ts'),
   },

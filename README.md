@@ -1,7 +1,86 @@
+# Hypeburner
+
 Hypeburner covers the business of developer tools.
 
-​Hashim is a Product Marketer for developer tools startups. He’s led product marketing at Knock, Apollo GraphQL, WP Engine, Gatsby, and Coder Foundry, and now consults with early-stage startups to help them launch new products.​
+Hashim is a Product Marketer for developer tools startups. He’s led product marketing at Knock, Apollo GraphQL, WP Engine, Gatsby, and Coder Foundry, and now consults with early-stage startups to help them launch new products.
 
-Outside of tech, Hashim serves refugee families in North Carolina through fundraising, arts programs, and small business support.​
+Outside of tech, Hashim serves refugee families in North Carolina through fundraising, arts programs, and small business support.
 
-When he’s not working on messaging or mentoring, you can find him reading a book about church history, or thumbing through a good comic book.
+Outside of work, when he’s not working on messaging or mentoring, you can find him reading a book about church history, or thumbing through a good comic book.
+
+## Environment Contract
+
+A single validation module (`lib/env.ts`) now owns the runtime contract for launch-sensitive vars.
+The goal is to fail fast when required values are missing and keep local, preview, and production behavior explicit.
+
+### Required baseline
+
+- `DATABASE_URI`
+- `PAYLOAD_SECRET`
+- `NEXT_PUBLIC_SITE_URL`
+
+### Optional + provider values
+
+- `PAYLOAD_API_KEY`
+- `PAYLOAD_LOCAL_API_URL`
+- `PAYLOAD_POSTS_COLLECTION` (default: `posts`)
+- `PAYLOAD_AUTHORS_COLLECTION` (default: `authors`)
+- `PAYLOAD_QUERY_LIMIT` (default: `1000`)
+- `POLAR_ACCESS_TOKEN`
+- `POLAR_WEBHOOK_SECRET`
+- `POLAR_PRODUCT_ID_MONTHLY`
+- `POLAR_PRODUCT_ID_ANNUAL`
+- `POLAR_API_BASE_URL` (default: `https://api.polar.sh`)
+- `RESEND_API_KEY`
+- `CONTACT_FORM_RECIPIENT`
+- `VERCEL_AUTOMATION_BYPASS_SECRET` (required for preview-protection bypass when calling internal routes)
+
+### Ownership and environment scope
+
+- Local development: `DATABASE_URI`, `PAYLOAD_SECRET`, optional service keys for local workflow.
+- Preview deployment: same contract as production for deterministic rendering; provide `VERCEL_AUTOMATION_BYPASS_SECRET` when preview protection is enabled and internal checks call back into the deployment.
+- Production: same required baseline plus any provider values used by enabled integrations.
+
+## Deployment checklist
+
+1. Populate environment variables and commit no secret values.
+2. Run:
+   - `yarn env:check`
+   - `yarn build`
+3. Confirm schema and payload startup paths can load with clear errors:
+   - `payload.config.ts` imports `lib/env` and fails fast with explicit missing-variable messages.
+4. If preview is protection-guarded, set `VERCEL_AUTOMATION_BYPASS_SECRET` in Vercel and mirror it in local smoke runs.
+
+## CMS route rendering settings
+
+The following routes are explicit static routes using Payload-backed data so behavior is consistent in preview/production and avoids mixed rendering modes:
+
+- `app/(site)/page.tsx`
+- `app/(site)/about/page.tsx`
+- `app/(site)/blog/page.tsx`
+- `app/(site)/blog/[...slug]/page.tsx`
+- `app/(site)/blog/page/[page]/page.tsx`
+- `app/(site)/tags/page.tsx`
+- `app/(site)/tags/[tag]/page.tsx`
+- `app/(site)/tags/[tag]/page/[page]/page.tsx`
+- `app/(site)/sitemap.ts`
+
+## CSP hardening
+
+`next.config.js` now centralizes script/connect/image/frame sources and keeps the policy explicit for the current known providers (`giscus`, `umami`, etc.).
+If a new provider is enabled, add its domains here before enabling it in site config.
+
+## Smoke checks
+
+Use the repository-level smoke script after deployment to validate preview/prod routes:
+
+```bash
+yarn deploy:smoke -- --url https://your-deployment-url
+```
+
+Optional: `SMOKE_URL` env var can be used instead of `--url`.
+If routes are protected and you need to simulate internal checks, ensure `VERCEL_AUTOMATION_BYPASS_SECRET` is set.
+
+```bash
+yarn deploy:smoke -- --url https://your-deployment-url --strict-protection
+```
