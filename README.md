@@ -32,7 +32,6 @@ The goal is to fail fast when required values are missing and keep local, previe
 - `POLAR_PRODUCT_ID_ANNUAL`
 - `POLAR_API_BASE_URL` (default: `https://api.polar.sh`)
 - `RESEND_API_KEY`
-- `RESEND_AUDIENCE_ID`
 - `CONTACT_FORM_RECIPIENT`
 - `VERCEL_AUTOMATION_BYPASS_SECRET` (required for preview-protection bypass when calling internal routes)
 
@@ -84,7 +83,11 @@ Newsletter subscriptions now run through a first-party endpoint:
 Required variables:
 
 - `RESEND_API_KEY`
-- `RESEND_AUDIENCE_ID`
+
+Notes:
+
+- Newsletter subscriptions use Resend global contacts.
+- `RESEND_AUDIENCE_ID` is deprecated and not required.
 
 Response contract:
 

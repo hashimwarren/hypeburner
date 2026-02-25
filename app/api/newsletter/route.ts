@@ -25,7 +25,7 @@ function isAlreadySubscribedError(error: { message?: string | null } | null | un
 }
 
 export async function POST(request: Request) {
-  if (!env.RESEND_API_KEY || !env.RESEND_AUDIENCE_ID) {
+  if (!env.RESEND_API_KEY) {
     const body: NewsletterResponse = {
       ok: false,
       code: ErrorCodes.MissingConfig,
@@ -55,7 +55,6 @@ export async function POST(request: Request) {
 
   const resend = new Resend(env.RESEND_API_KEY)
   const { error } = await resend.contacts.create({
-    audienceId: env.RESEND_AUDIENCE_ID,
     email,
     unsubscribed: false,
   })

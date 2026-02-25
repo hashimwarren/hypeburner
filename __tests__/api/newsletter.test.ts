@@ -5,7 +5,6 @@ type NewsletterRouteModule = {
 type LoadRouteOptions = {
   envOverrides?: Partial<{
     RESEND_API_KEY: string
-    RESEND_AUDIENCE_ID: string
   }>
   createResponse?: {
     data: unknown
@@ -33,7 +32,6 @@ async function loadRoute(options: LoadRouteOptions = {}) {
   jest.doMock('lib/env', () => ({
     env: {
       RESEND_API_KEY: 're_test',
-      RESEND_AUDIENCE_ID: 'aud_test',
       ...options.envOverrides,
     },
   }))
@@ -75,7 +73,7 @@ describe('Newsletter API (/api/newsletter)', () => {
   it('returns 500 when required Resend config is missing', async () => {
     const { POST } = await loadRoute({
       envOverrides: {
-        RESEND_AUDIENCE_ID: '',
+        RESEND_API_KEY: '',
       },
     })
     const response = await POST(
@@ -107,7 +105,6 @@ describe('Newsletter API (/api/newsletter)', () => {
     expect(body.ok).toBe(true)
     expect(body.code).toBe('OK')
     expect(contactsCreate).toHaveBeenCalledWith({
-      audienceId: 'aud_test',
       email: 'reader@example.com',
       unsubscribed: false,
     })
@@ -137,7 +134,7 @@ describe('Newsletter API (/api/newsletter)', () => {
     expect(body.code).toBe('OK_ALREADY_SUBSCRIBED')
   })
 
-  it('returns 502 when Resend audience API fails', async () => {
+  it('returns 502 when Resend contacts API fails', async () => {
     const { POST } = await loadRoute({
       createResponse: {
         data: null,
