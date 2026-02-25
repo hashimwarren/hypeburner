@@ -41,7 +41,7 @@ jobs:
           cache: 'yarn'
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: yarn install --frozen-lockfile --production=false
 
       - name: Launch verification suite
         run: yarn launch:verify
