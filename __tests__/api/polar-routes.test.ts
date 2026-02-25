@@ -43,6 +43,7 @@ function createPolarServerMock(overrides: Partial<PolarServerMock> = {}): PolarS
     PolarUpstreamError: MockPolarUpstreamError,
     PolarErrorCodes: {
       InvalidInput: 'ERR_POLAR_INVALID_INPUT',
+      Unauthorized: 'ERR_POLAR_UNAUTHORIZED',
       MissingConfig: 'ERR_POLAR_MISSING_CONFIG',
       Upstream: 'ERR_POLAR_UPSTREAM',
       CustomerNotFound: 'ERR_POLAR_CUSTOMER_NOT_FOUND',
@@ -180,8 +181,32 @@ describe('Polar checkout API', () => {
 })
 
 describe('Polar portal API', () => {
-  it('returns 404 when customer lookup misses', async () => {
+  it('returns 401 when request is unauthenticated', async () => {
     const payloadClient = {
+      auth: jest.fn().mockResolvedValue({ user: null }),
+      find: jest.fn(),
+    }
+
+    const { POST } = await loadRoute('../../app/api/polar/portal/route', {
+      getPayloadClient: jest.fn().mockResolvedValue(payloadClient),
+    })
+
+    const response = await POST(
+      new Request('http://localhost/api/polar/portal', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({}),
+      })
+    )
+
+    const body = await response.json()
+    expect(response.status).toBe(401)
+    expect(body.code).toBe('ERR_POLAR_UNAUTHORIZED')
+  })
+
+  it('returns 404 when authenticated user has no customer record', async () => {
+    const payloadClient = {
+      auth: jest.fn().mockResolvedValue({ user: { id: 'user_1', role: 'customer' } }),
       find: jest.fn().mockResolvedValue({ docs: [] }),
     }
 
@@ -193,7 +218,7 @@ describe('Polar portal API', () => {
       new Request('http://localhost/api/polar/portal', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ email: 'nobody@example.com' }),
+        body: JSON.stringify({}),
       })
     )
 
@@ -204,6 +229,7 @@ describe('Polar portal API', () => {
 
   it('falls back to second endpoint and returns a portal URL', async () => {
     const payloadClient = {
+      auth: jest.fn().mockResolvedValue({ user: { id: 'user_1', role: 'customer' } }),
       find: jest.fn().mockResolvedValue({
         docs: [{ polarCustomerId: 'cus_999' }],
       }),
@@ -222,7 +248,7 @@ describe('Polar portal API', () => {
       new Request('http://localhost/api/polar/portal', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ email: 'member@example.com' }),
+        body: JSON.stringify({}),
       })
     )
 
@@ -294,6 +320,70 @@ describe('Polar webhook API', () => {
     expect(body.duplicate).toBe(true)
     expect(payloadClient.create).not.toHaveBeenCalled()
     expect(payloadClient.update).not.toHaveBeenCalled()
+  })
+
+  it('does not upsert subscriptions for non-subscription events', async () => {
+    const payloadClient = {
+      find: jest.fn().mockImplementation(({ collection }) => {
+        if (collection === 'polarWebhookEvents') {
+          return Promise.resolve({ docs: [] })
+        }
+        if (collection === 'polarCustomers') {
+          return Promise.resolve({ docs: [] })
+        }
+        if (collection === 'polarSubscriptions') {
+          return Promise.resolve({ docs: [] })
+        }
+        return Promise.resolve({ docs: [] })
+      }),
+      create: jest.fn().mockImplementation(({ collection }) => {
+        if (collection === 'polarWebhookEvents') {
+          return Promise.resolve({ id: 'wh_new' })
+        }
+        if (collection === 'polarCustomers') {
+          return Promise.resolve({ id: 'cust_1', user: 'user_1' })
+        }
+        return Promise.resolve({ id: 'doc_1' })
+      }),
+      update: jest.fn().mockResolvedValue({}),
+      findByID: jest.fn().mockResolvedValue({ id: 'user_1' }),
+    }
+
+    const { POST } = await loadRoute('../../app/api/polar/webhook/route', {
+      getPayloadClient: jest.fn().mockResolvedValue(payloadClient),
+      verifyPolarSignature: jest.fn(() => true),
+    })
+
+    const response = await POST(
+      new Request('http://localhost/api/polar/webhook', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'polar-signature': 'sig_123',
+        },
+        body: JSON.stringify({
+          id: 'evt_customer_1',
+          type: 'customer.updated',
+          data: {
+            customer: {
+              id: 'cus_1',
+              email: 'member@example.com',
+              metadata: { userId: 'user_1' },
+            },
+          },
+        }),
+      })
+    )
+
+    const body = await response.json()
+    expect(response.status).toBe(200)
+    expect(body.ok).toBe(true)
+    expect(payloadClient.create).not.toHaveBeenCalledWith(
+      expect.objectContaining({ collection: 'polarSubscriptions' })
+    )
+    expect(payloadClient.update).not.toHaveBeenCalledWith(
+      expect.objectContaining({ collection: 'polarSubscriptions' })
+    )
   })
 
   it('returns 400 for invalid JSON payloads', async () => {

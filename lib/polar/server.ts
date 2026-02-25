@@ -5,6 +5,7 @@ import { env } from '../env'
 
 export const PolarErrorCodes = {
   InvalidInput: 'ERR_POLAR_INVALID_INPUT',
+  Unauthorized: 'ERR_POLAR_UNAUTHORIZED',
   MissingConfig: 'ERR_POLAR_MISSING_CONFIG',
   Upstream: 'ERR_POLAR_UPSTREAM',
   CustomerNotFound: 'ERR_POLAR_CUSTOMER_NOT_FOUND',
@@ -120,7 +121,11 @@ function parseSignatureHeader(value: string) {
   }
 
   for (const part of value.split(',')) {
-    const [rawKey, rawValue] = part.split('=')
+    const separatorIndex = part.indexOf('=')
+    if (separatorIndex === -1) continue
+
+    const rawKey = part.slice(0, separatorIndex)
+    const rawValue = part.slice(separatorIndex + 1)
     const key = String(rawKey || '')
       .trim()
       .toLowerCase()

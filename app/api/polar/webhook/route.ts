@@ -180,12 +180,9 @@ async function upsertSubscription(
 ) {
   const nestedSubscription = asRecord(payloadData.subscription)
   const source = nestedSubscription || payloadData
-  const subscriptionId = firstString(source, [
-    'id',
-    'subscription_id',
-    'subscriptionId',
-    'polarSubscriptionId',
-  ])
+  const subscriptionId = nestedSubscription
+    ? firstString(source, ['id', 'subscription_id', 'subscriptionId', 'polarSubscriptionId'])
+    : firstString(source, ['subscription_id', 'subscriptionId', 'polarSubscriptionId'])
   if (!subscriptionId) return null
 
   let existing: RecordShape | null = await findOneByField(
@@ -289,6 +286,21 @@ async function upsertSubscription(
   })
 }
 
+function shouldUpsertSubscription(eventType: string, payloadData: RecordShape) {
+  const normalizedEventType = eventType.toLowerCase()
+  if (normalizedEventType.includes('subscription')) return true
+
+  if (asRecord(payloadData.subscription)) return true
+
+  const explicitSubscriptionId = firstString(payloadData, [
+    'subscription_id',
+    'subscriptionId',
+    'polarSubscriptionId',
+  ])
+
+  return Boolean(explicitSubscriptionId)
+}
+
 function jsonError(status: number, code: string, message: string, details?: unknown) {
   return NextResponse.json(
     {
@@ -380,11 +392,14 @@ export async function POST(request: Request) {
     }
 
     const customer = await upsertCustomer(payloadClient, extractedEvent.payloadData)
-    await upsertSubscription(
-      payloadClient,
-      extractedEvent.payloadData,
-      customer as RecordShape | null
-    )
+
+    if (shouldUpsertSubscription(extractedEvent.eventType, extractedEvent.payloadData)) {
+      await upsertSubscription(
+        payloadClient,
+        extractedEvent.payloadData,
+        customer as RecordShape | null
+      )
+    }
 
     if (webhookDocId !== undefined) {
       await payloadClient.update({

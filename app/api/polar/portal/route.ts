@@ -11,15 +11,16 @@ import {
 
 export const runtime = 'nodejs'
 
-const requestSchema = z
-  .object({
-    customerId: z.string().trim().min(1).optional(),
-    email: z.string().trim().email().optional(),
-    userId: z.union([z.string().trim().min(1), z.number().int().positive()]).optional(),
-  })
-  .refine((value) => Boolean(value.customerId || value.email || value.userId), {
-    message: 'Provide at least one of customerId, email, or userId.',
-  })
+const requestSchema = z.object({
+  customerId: z.string().trim().min(1).optional(),
+  email: z.string().trim().email().optional(),
+  userId: z.union([z.string().trim().min(1), z.number().int().positive()]).optional(),
+})
+
+type AuthUser = {
+  id?: string | number
+  role?: string
+}
 
 function errorResponse(status: number, code: string, message: string, details?: unknown) {
   return NextResponse.json(
@@ -37,6 +38,10 @@ function toUserId(value: string | number): string | number {
   if (typeof value === 'number') return value
   if (/^\d+$/.test(value)) return Number(value)
   return value
+}
+
+function sameIdentity(a: string | number, b: string | number) {
+  return String(a) === String(b)
 }
 
 async function resolveCustomerId(
@@ -116,6 +121,19 @@ async function createPortalSession(customerId: string) {
 
 export async function POST(request: Request) {
   try {
+    const payloadClient = await getPayloadClient()
+    const { user } = await payloadClient.auth({ headers: request.headers })
+    const authUser = user as AuthUser | null
+
+    if (!authUser?.id) {
+      return errorResponse(
+        401,
+        PolarErrorCodes.Unauthorized,
+        'Authentication required to create a customer portal session.'
+      )
+    }
+
+    const isAdmin = authUser.role === 'admin'
     const parsedBody = requestSchema.safeParse(await request.json())
     if (!parsedBody.success) {
       return errorResponse(
@@ -127,10 +145,43 @@ export async function POST(request: Request) {
     }
 
     const parsedData = parsedBody.data
-    const targetUserId =
-      parsedData.userId !== undefined ? toUserId(parsedData.userId as string | number) : undefined
+    let customer: Awaited<ReturnType<typeof resolveCustomerId>> = null
 
-    const customer = await resolveCustomerId(parsedData.customerId, parsedData.email, targetUserId)
+    if (isAdmin) {
+      if (!parsedData.customerId && !parsedData.email && parsedData.userId === undefined) {
+        return errorResponse(
+          400,
+          PolarErrorCodes.InvalidInput,
+          'Provide at least one of customerId, email, or userId.'
+        )
+      }
+
+      const targetUserId =
+        parsedData.userId !== undefined ? toUserId(parsedData.userId as string | number) : undefined
+
+      customer = await resolveCustomerId(parsedData.customerId, parsedData.email, targetUserId)
+    } else {
+      if (parsedData.customerId || parsedData.email) {
+        return errorResponse(
+          403,
+          PolarErrorCodes.Unauthorized,
+          'Non-admin users cannot look up portal sessions by customerId or email.'
+        )
+      }
+
+      if (parsedData.userId !== undefined) {
+        const requestedUserId = toUserId(parsedData.userId as string | number)
+        if (!sameIdentity(requestedUserId, authUser.id)) {
+          return errorResponse(
+            403,
+            PolarErrorCodes.Unauthorized,
+            'Cannot request a portal session for another user.'
+          )
+        }
+      }
+
+      customer = await resolveCustomerId(undefined, undefined, authUser.id)
+    }
 
     if (!customer || typeof customer.polarCustomerId !== 'string') {
       return errorResponse(
