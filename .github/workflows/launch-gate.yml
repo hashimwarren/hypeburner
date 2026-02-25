@@ -1,0 +1,56 @@
+name: Launch Gate
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      smoke_url:
+        description: 'Optional remote preview/production-lite URL to smoke test'
+        required: false
+        type: string
+      strict_protection:
+        description: 'Require strict protection validation when bypass secret is used'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  launch-gate:
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URI: ${{ secrets.DATABASE_URI != '' && secrets.DATABASE_URI || 'postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable' }}
+      PAYLOAD_SECRET: ${{ secrets.PAYLOAD_SECRET != '' && secrets.PAYLOAD_SECRET || 'launch-gate-secret' }}
+      NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL != '' && secrets.NEXT_PUBLIC_SITE_URL || 'http://127.0.0.1:3000' }}
+      NODE_ENV: test
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Launch verification suite
+        run: yarn launch:verify
+
+      - name: Optional remote smoke check
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.smoke_url != '' }}
+        env:
+          SMOKE_URL: ${{ inputs.smoke_url }}
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+        run: |
+          if [ "${{ inputs.strict_protection }}" = "true" ]; then
+            node ./scripts/smoke.mjs --url "$SMOKE_URL" --strict-protection
+          else
+            node ./scripts/smoke.mjs --url "$SMOKE_URL"
+          fi
