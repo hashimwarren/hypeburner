@@ -21,11 +21,14 @@ jobs:
   launch-gate:
     timeout-minutes: 60
     runs-on: ubuntu-latest
+    if: |
+      github.event_name != 'pull_request' ||
+      github.event.pull_request.head.repo.full_name == github.repository
     env:
-      DATABASE_URI: ${{ secrets.DATABASE_URI != '' && secrets.DATABASE_URI || 'postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable' }}
-      PAYLOAD_SECRET: ${{ secrets.PAYLOAD_SECRET != '' && secrets.PAYLOAD_SECRET || 'launch-gate-secret' }}
-      NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL != '' && secrets.NEXT_PUBLIC_SITE_URL || 'http://127.0.0.1:3000' }}
-      NODE_ENV: test
+      DATABASE_URI: ${{ secrets.DATABASE_URI }}
+      PAYLOAD_SECRET: ${{ secrets.PAYLOAD_SECRET }}
+      NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL }}
+      NODE_ENV: production
 
     steps:
       - name: Checkout
