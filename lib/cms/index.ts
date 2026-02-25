@@ -121,6 +121,10 @@ function getFallbackAuthor(): CmsAuthor {
 }
 
 export const getAllPosts = cache(async (): Promise<CmsPost[]> => {
+  if (!env.hasCmsEnv) {
+    return []
+  }
+
   let payload
   try {
     payload = await getPayloadClient()
@@ -169,6 +173,10 @@ export const getAllPostSlugs = cache(async (): Promise<string[]> => {
 })
 
 export const getPostBySlug = cache(async (slugValue: string): Promise<CmsPost | null> => {
+  if (!env.hasCmsEnv) {
+    return null
+  }
+
   let payload
   try {
     payload = await getPayloadClient()
@@ -230,6 +238,10 @@ export async function getTagCounts(): Promise<CmsTagCounts> {
 }
 
 export async function getDefaultAuthor(): Promise<CmsAuthor | null> {
+  if (!env.hasCmsEnv) {
+    return getFallbackAuthor()
+  }
+
   let payload
   try {
     payload = await getPayloadClient()

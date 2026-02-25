@@ -14,8 +14,8 @@ function ensureEnvFilesLoaded() {
 }
 
 const envSchema = z.object({
-  DATABASE_URI: z.string().trim().min(1, 'DATABASE_URI is required'),
-  PAYLOAD_SECRET: z.string().trim().min(1, 'PAYLOAD_SECRET is required'),
+  DATABASE_URI: z.string().trim().optional(),
+  PAYLOAD_SECRET: z.string().trim().optional(),
   PAYLOAD_API_KEY: z.string().trim().optional(),
   PAYLOAD_LOCAL_API_URL: z.string().trim().optional(),
   NEXT_PUBLIC_SITE_URL: z
@@ -83,12 +83,15 @@ function detectDeploymentMode(
   return 'development'
 }
 
-export type EnvContract = EnvRuntimeShape & {
+export type EnvContract = Omit<EnvRuntimeShape, 'DATABASE_URI' | 'PAYLOAD_SECRET'> & {
+  DATABASE_URI: string
+  PAYLOAD_SECRET: string
   isVercel: boolean
   deployment: 'local' | 'preview' | 'production' | 'development'
   includeDrafts: boolean
   isProduction: boolean
   isPreview: boolean
+  hasCmsEnv: boolean
 }
 
 let cachedEnv: EnvContract | null = null
@@ -109,14 +112,25 @@ export function loadEnv(): EnvContract {
   const isVercel = base.VERCEL === '1'
   const deployment = detectDeploymentMode(base.NODE_ENV, isVercel, base.VERCEL_ENV)
   const includeDrafts = deployment === 'local' && base.NODE_ENV !== 'production'
+  const hasCmsEnv = Boolean(base.DATABASE_URI && base.PAYLOAD_SECRET)
+  const allowMissingCmsEnv = process.env.GITHUB_ACTIONS === 'true' && !isVercel
+
+  if (!hasCmsEnv && !allowMissingCmsEnv) {
+    throw new Error(
+      'Environment validation failed:\nDATABASE_URI: Required\nPAYLOAD_SECRET: Required'
+    )
+  }
 
   const env = {
     ...base,
+    DATABASE_URI: base.DATABASE_URI || 'postgres://placeholder.invalid/hypeburner',
+    PAYLOAD_SECRET: base.PAYLOAD_SECRET || 'placeholder-secret',
     isVercel,
     deployment,
     includeDrafts,
     isProduction: deployment === 'production',
     isPreview: deployment === 'preview',
+    hasCmsEnv,
   }
 
   cachedEnv = env as EnvContract

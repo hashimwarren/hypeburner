@@ -51,6 +51,29 @@ The goal is to fail fast when required values are missing and keep local, previe
    - `payload.config.ts` imports `lib/env` and fails fast with explicit missing-variable messages.
 4. If preview is protection-guarded, set `VERCEL_AUTOMATION_BYPASS_SECRET` in Vercel and mirror it in local smoke runs.
 
+## Polar API routes
+
+Launch billing entry points:
+
+- `POST /api/polar/checkout`
+- `POST /api/polar/portal`
+- `POST /api/polar/webhook`
+
+Response contract:
+
+- Success: `{ ok: true, code: "OK", ... }`
+- Failure: `{ ok: false, code: "ERR_*", message: string, details?: unknown }`
+
+Route error codes:
+
+- `ERR_POLAR_INVALID_INPUT`
+- `ERR_POLAR_MISSING_CONFIG`
+- `ERR_POLAR_UPSTREAM`
+- `ERR_POLAR_CUSTOMER_NOT_FOUND`
+- `ERR_POLAR_INVALID_SIGNATURE`
+- `ERR_POLAR_INVALID_PAYLOAD`
+- `ERR_POLAR_PROCESSING_FAILED`
+
 ## CMS route rendering settings
 
 The following routes are explicit static routes using Payload-backed data so behavior is consistent in preview/production and avoids mixed rendering modes:

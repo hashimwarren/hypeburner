@@ -15,6 +15,11 @@ const outputFolder = process.env.EXPORT ? 'out' : 'public'
 const POSTS_COLLECTION = process.env.PAYLOAD_POSTS_COLLECTION?.trim() || 'posts'
 const queryLimitValue = Number(process.env.PAYLOAD_QUERY_LIMIT || '1000')
 const QUERY_LIMIT = Number.isFinite(queryLimitValue) && queryLimitValue > 0 ? queryLimitValue : 1000
+const HAS_CMS_ENV = Boolean(
+  process.env.DATABASE_URI?.trim() && process.env.PAYLOAD_SECRET?.trim()
+)
+const SKIP_CMS_DB =
+  process.env.GITHUB_ACTIONS === 'true' && process.env.VERCEL !== '1' && !HAS_CMS_ENV
 
 function normalizeTags(value) {
   if (!Array.isArray(value)) return []
@@ -107,6 +112,11 @@ async function getPayloadClient() {
 }
 
 export async function getPublishedPosts() {
+  if (SKIP_CMS_DB) {
+    console.warn('[artifacts] CMS env vars missing in GitHub Actions; generating empty artifacts.')
+    return []
+  }
+
   let payloadClient
   try {
     payloadClient = await getPayloadClient()
