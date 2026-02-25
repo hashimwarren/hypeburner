@@ -5,35 +5,33 @@ type NewsletterRouteModule = {
 type LoadRouteOptions = {
   envOverrides?: Partial<{
     RESEND_API_KEY: string
-    RESEND_AUDIENCE_ID: string
   }>
-  createResponse?: {
-    data: unknown
-    error: { message?: string; name?: string } | null
-  }
+  fetchStatus?: number
+  fetchJsonBody?: unknown
+  fetchReject?: Error
 }
 
 async function loadRoute(options: LoadRouteOptions = {}) {
-  const contactsCreate = jest.fn().mockResolvedValue(
-    options.createResponse ?? {
-      data: { id: 'contact_123' },
-      error: null,
-    }
-  )
+  const fetchMock = jest.fn()
+
+  if (options.fetchReject) {
+    fetchMock.mockRejectedValue(options.fetchReject)
+  } else {
+    const status = options.fetchStatus ?? 200
+    fetchMock.mockResolvedValue({
+      ok: status >= 200 && status < 300,
+      status,
+      json: jest.fn().mockResolvedValue(options.fetchJsonBody ?? { id: 'contact_123' }),
+    })
+  }
+
+  ;(global as unknown as { fetch: typeof fetch }).fetch = fetchMock as unknown as typeof fetch
 
   jest.resetModules()
-  jest.doMock('resend', () => ({
-    Resend: jest.fn().mockImplementation(() => ({
-      contacts: {
-        create: contactsCreate,
-      },
-    })),
-  }))
 
   jest.doMock('lib/env', () => ({
     env: {
       RESEND_API_KEY: 're_test',
-      RESEND_AUDIENCE_ID: 'aud_test',
       ...options.envOverrides,
     },
   }))
@@ -41,7 +39,7 @@ async function loadRoute(options: LoadRouteOptions = {}) {
   const route = (await import('../../app/api/newsletter/route')) as NewsletterRouteModule
   return {
     POST: route.POST,
-    contactsCreate,
+    fetchMock,
   }
 }
 
@@ -75,7 +73,7 @@ describe('Newsletter API (/api/newsletter)', () => {
   it('returns 500 when required Resend config is missing', async () => {
     const { POST } = await loadRoute({
       envOverrides: {
-        RESEND_AUDIENCE_ID: '',
+        RESEND_API_KEY: '',
       },
     })
     const response = await POST(
@@ -93,7 +91,7 @@ describe('Newsletter API (/api/newsletter)', () => {
   })
 
   it('returns 200 for successful subscriptions', async () => {
-    const { POST, contactsCreate } = await loadRoute()
+    const { POST, fetchMock } = await loadRoute()
     const response = await POST(
       new Request('http://localhost/api/newsletter', {
         method: 'POST',
@@ -106,8 +104,18 @@ describe('Newsletter API (/api/newsletter)', () => {
     expect(response.status).toBe(200)
     expect(body.ok).toBe(true)
     expect(body.code).toBe('OK')
-    expect(contactsCreate).toHaveBeenCalledWith({
-      audienceId: 'aud_test',
+    expect(fetchMock).toHaveBeenCalledWith(
+      'https://api.resend.com/contacts',
+      expect.objectContaining({
+        method: 'POST',
+        headers: expect.objectContaining({
+          Authorization: 'Bearer re_test',
+          'Content-Type': 'application/json',
+        }),
+      })
+    )
+    const [, callInit] = fetchMock.mock.calls[0]
+    expect(JSON.parse(callInit.body as string)).toEqual({
       email: 'reader@example.com',
       unsubscribed: false,
     })
@@ -115,12 +123,9 @@ describe('Newsletter API (/api/newsletter)', () => {
 
   it('treats existing contacts as successful idempotent subscriptions', async () => {
     const { POST } = await loadRoute({
-      createResponse: {
-        data: null,
-        error: {
-          name: 'validation_error',
-          message: 'Contact already exists',
-        },
+      fetchStatus: 409,
+      fetchJsonBody: {
+        message: 'Contact already exists',
       },
     })
     const response = await POST(
@@ -137,14 +142,11 @@ describe('Newsletter API (/api/newsletter)', () => {
     expect(body.code).toBe('OK_ALREADY_SUBSCRIBED')
   })
 
-  it('returns 502 when Resend audience API fails', async () => {
+  it('returns 502 when Resend contacts API fails', async () => {
     const { POST } = await loadRoute({
-      createResponse: {
-        data: null,
-        error: {
-          name: 'internal_server_error',
-          message: 'Resend is unavailable',
-        },
+      fetchStatus: 500,
+      fetchJsonBody: {
+        message: 'Resend is unavailable',
       },
     })
     const response = await POST(

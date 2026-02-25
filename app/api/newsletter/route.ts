@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server'
-import { Resend } from 'resend'
 import { env } from 'lib/env'
 
 export const dynamic = 'force-dynamic'
@@ -24,8 +23,38 @@ function isAlreadySubscribedError(error: { message?: string | null } | null | un
   return message.includes('already exists') || message.includes('already subscribed')
 }
 
+async function createResendContact(apiKey: string, email: string) {
+  const response = await fetch('https://api.resend.com/contacts', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      email,
+      unsubscribed: false,
+    }),
+  })
+
+  if (response.ok) {
+    return { error: null as { message?: string | null } | null }
+  }
+
+  const parsedBody = (await response.json().catch(() => null)) as {
+    message?: string
+    error?: { message?: string }
+  } | null
+
+  const message =
+    parsedBody?.message ||
+    parsedBody?.error?.message ||
+    `Resend contact request failed (${response.status})`
+
+  return { error: { message } }
+}
+
 export async function POST(request: Request) {
-  if (!env.RESEND_API_KEY || !env.RESEND_AUDIENCE_ID) {
+  if (!env.RESEND_API_KEY) {
     const body: NewsletterResponse = {
       ok: false,
       code: ErrorCodes.MissingConfig,
@@ -53,12 +82,19 @@ export async function POST(request: Request) {
     return NextResponse.json(body, { status: 400 })
   }
 
-  const resend = new Resend(env.RESEND_API_KEY)
-  const { error } = await resend.contacts.create({
-    audienceId: env.RESEND_AUDIENCE_ID,
-    email,
-    unsubscribed: false,
-  })
+  let error: { message?: string | null } | null = null
+  try {
+    const result = await createResendContact(env.RESEND_API_KEY, email)
+    error = result.error
+  } catch (requestError) {
+    console.error('Newsletter subscribe error:', requestError)
+    const body: NewsletterResponse = {
+      ok: false,
+      code: ErrorCodes.Upstream,
+      message: "We couldn't subscribe you right now. Please try again shortly.",
+    }
+    return NextResponse.json(body, { status: 502 })
+  }
 
   if (error) {
     if (isAlreadySubscribedError(error)) {
