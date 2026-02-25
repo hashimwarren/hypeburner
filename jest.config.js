@@ -24,6 +24,7 @@ const customJestConfig = {
     '^@/data/(.*)$': '<rootDir>/data/$1',
     '^@/css/(.*)$': '<rootDir>/css/$1',
     '^@/app/(.*)$': '<rootDir>/app/$1',
+    '^lib/(.*)$': '<rootDir>/lib/$1',
   },
   transform: {
     '^.+\\.(js|jsx|ts|tsx)$': ['babel-jest', { presets: ['next/babel'] }],
