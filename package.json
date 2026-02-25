@@ -23,6 +23,7 @@
     "prepare": "husky",
     "env:check": "node ./scripts/check-env.mjs",
     "deploy:smoke": "node ./scripts/smoke.mjs",
+    "launch:verify": "node ./scripts/launch-verify.mjs",
     "artifacts:cms": "node ./scripts/generate-cms-artifacts.mjs",
     "guard:runtime-cms": "node ./scripts/check-runtime-cms-only.mjs"
   },
