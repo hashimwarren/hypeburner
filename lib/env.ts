@@ -44,6 +44,7 @@ const envSchema = z.object({
     .url('POLAR_API_BASE_URL must be a URL')
     .default('https://api.polar.sh'),
   RESEND_API_KEY: z.string().trim().optional(),
+  RESEND_AUDIENCE_ID: z.string().trim().optional(),
   CONTACT_FORM_RECIPIENT: z
     .string()
     .trim()

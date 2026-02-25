@@ -50,9 +50,8 @@ const siteMetadata = {
     // },
   },
   newsletter: {
-    // supports mailchimp, buttondown, convertkit, klaviyo, revue, emailoctopus, beehive
-    // Please add your .env file and modify it according to your selection
-    provider: 'mailchimp',
+    // Newsletter UI is local and /api/newsletter is backed by Resend audiences.
+    provider: 'resend',
   },
   comments: {
     // If you want to use an analytics provider you have to add it to the

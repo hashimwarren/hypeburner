@@ -32,6 +32,7 @@ The goal is to fail fast when required values are missing and keep local, previe
 - `POLAR_PRODUCT_ID_ANNUAL`
 - `POLAR_API_BASE_URL` (default: `https://api.polar.sh`)
 - `RESEND_API_KEY`
+- `RESEND_AUDIENCE_ID`
 - `CONTACT_FORM_RECIPIENT`
 - `VERCEL_AUTOMATION_BYPASS_SECRET` (required for preview-protection bypass when calling internal routes)
 
@@ -73,6 +74,22 @@ Route error codes:
 - `ERR_POLAR_INVALID_SIGNATURE`
 - `ERR_POLAR_INVALID_PAYLOAD`
 - `ERR_POLAR_PROCESSING_FAILED`
+
+## Newsletter API route
+
+Newsletter subscriptions now run through a first-party endpoint:
+
+- `POST /api/newsletter`
+
+Required variables:
+
+- `RESEND_API_KEY`
+- `RESEND_AUDIENCE_ID`
+
+Response contract:
+
+- Success: `{ ok: true, code: "OK" | "OK_ALREADY_SUBSCRIBED", message: string }`
+- Failure: `{ ok: false, code: "ERR_*", message: string }`
 
 ## CMS route rendering settings
 

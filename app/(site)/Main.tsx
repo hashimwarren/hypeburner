@@ -1,8 +1,8 @@
 import Link from '@/components/Link'
+import NewsletterForm from '@/components/NewsletterForm'
 import Tag from '@/components/Tag'
 import siteMetadata from '@/data/siteMetadata'
 import { formatDate } from 'pliny/utils/formatDate'
-import NewsletterForm from 'pliny/ui/NewsletterForm'
 import type { SiteAuthor, SitePost } from 'src/payload/types'
 
 const MAX_DISPLAY = 5
