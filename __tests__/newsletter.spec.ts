@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test'
 
+const homePage = 'http://localhost:3000/'
+
 test.describe('Newsletter Form', () => {
   test('subscribes successfully with a valid email', async ({ page }) => {
     await page.route('**/api/newsletter', async (route) => {
@@ -14,19 +16,31 @@ test.describe('Newsletter Form', () => {
       })
     })
 
-    await page.goto('http://localhost:3000/')
+    await page.goto(homePage)
+    await expect(page.locator('#newsletter-email')).toBeVisible()
     await page.fill('#newsletter-email', 'reader@example.com')
     await page.click('button:has-text("Subscribe")')
 
-    await expect(page.getByText('You are subscribed. Welcome to the newsletter.')).toBeVisible()
+    const newsletterSection = page.locator('#newsletter-email').locator('../..')
+    await expect(
+      newsletterSection.getByText('You are subscribed. Welcome to the newsletter.', { exact: true })
+    ).toBeVisible({
+      timeout: 10000,
+    })
   })
 
   test('shows validation message for invalid email', async ({ page }) => {
-    await page.goto('http://localhost:3000/')
+    await page.goto(homePage)
+    await expect(page.locator('#newsletter-email')).toBeVisible()
     await page.fill('#newsletter-email', 'bad-email')
     await page.click('button:has-text("Subscribe")')
 
-    await expect(page.getByText('Please enter a valid email address.')).toBeVisible()
+    const newsletterSection = page.locator('#newsletter-email').locator('../..')
+    await expect(
+      newsletterSection.getByText('Please enter a valid email address.', { exact: true })
+    ).toBeVisible({
+      timeout: 10000,
+    })
   })
 
   test('shows actionable message when API fails', async ({ page }) => {
@@ -42,12 +56,19 @@ test.describe('Newsletter Form', () => {
       })
     })
 
-    await page.goto('http://localhost:3000/')
+    await page.goto(homePage)
+    await expect(page.locator('#newsletter-email')).toBeVisible()
     await page.fill('#newsletter-email', 'reader@example.com')
     await page.click('button:has-text("Subscribe")')
 
+    const newsletterSection = page.locator('#newsletter-email').locator('../..')
     await expect(
-      page.getByText("We couldn't subscribe you right now. Please try again shortly.")
-    ).toBeVisible()
+      newsletterSection.getByText(
+        "We couldn't subscribe you right now. Please try again shortly.",
+        {
+          exact: true,
+        }
+      )
+    ).toBeVisible({ timeout: 10000 })
   })
 })
