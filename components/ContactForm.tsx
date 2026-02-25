@@ -84,13 +84,19 @@ export default function ContactForm() {
         setSubmitMessage('Thank you! Your message has been sent successfully.')
         setFormData({ name: '', email: '', message: '' })
       } else {
-        const errorData = await response.json()
+        const errorData = await response.json().catch(() => null)
         setSubmitStatus('error')
-        setSubmitMessage(errorData.error || 'Something went wrong. Please try again.')
+        setSubmitMessage(
+          errorData?.message ||
+            errorData?.error ||
+            "We couldn't send your message right now. Please try again in a few minutes."
+        )
       }
-    } catch (error) {
+    } catch {
       setSubmitStatus('error')
-      setSubmitMessage('Network error. Please check your connection and try again.')
+      setSubmitMessage(
+        "We couldn't send your message right now. Please check your connection and try again."
+      )
     } finally {
       setIsSubmitting(false)
     }
