@@ -1,13 +1,27 @@
 'use client'
 
-import { useState } from 'react'
+import { ReactNode, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { cn } from '@/components/lib/utils'
 
 type NewsletterFormProps = {
-  title?: string
-  description?: string
+  title?: string | null
+  description?: string | null
   compact?: boolean
+  inputId?: string
+  className?: string
+  headerClassName?: string
+  titleClassName?: string
+  descriptionClassName?: string
+  formClassName?: string
+  inputClassName?: string
+  buttonClassName?: string
+  buttonVariant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link'
+  buttonSize?: 'default' | 'sm' | 'lg' | 'icon'
+  statusClassName?: string
+  beforeForm?: ReactNode
+  afterForm?: ReactNode
 }
 
 type SubmitState = 'idle' | 'submitting' | 'success' | 'error'
@@ -22,10 +36,25 @@ function isValidEmail(value: string): boolean {
 }
 
 export default function NewsletterForm({
-  title = 'Subscribe to the newsletter',
-  description = 'Get new posts and launch breakdowns in your inbox.',
+  title,
+  description,
   compact = false,
+  inputId = 'newsletter-email',
+  className,
+  headerClassName,
+  titleClassName,
+  descriptionClassName,
+  formClassName,
+  inputClassName,
+  buttonClassName,
+  buttonVariant = 'default',
+  buttonSize = 'default',
+  statusClassName,
+  beforeForm,
+  afterForm,
 }: NewsletterFormProps) {
+  const resolvedTitle = title ?? 'Subscribe to the newsletter'
+  const resolvedDescription = description ?? 'Get new posts and launch breakdowns in your inbox.'
   const [email, setEmail] = useState('')
   const [state, setState] = useState<SubmitState>('idle')
   const [message, setMessage] = useState('')
@@ -73,18 +102,41 @@ export default function NewsletterForm({
   }
 
   return (
-    <div className={`w-full ${compact ? 'max-w-lg' : 'max-w-2xl'} rounded-xl border p-6`}>
-      <div className="space-y-1">
-        <h2 className={`${compact ? 'text-lg' : 'text-xl'} font-semibold`}>{title}</h2>
-        <p className="text-sm text-gray-600 dark:text-gray-400">{description}</p>
-      </div>
+    <div
+      className={cn('w-full rounded-xl border p-6', compact ? 'max-w-lg' : 'max-w-2xl', className)}
+    >
+      {(resolvedTitle || resolvedDescription) && (
+        <div className={cn('space-y-1', headerClassName)}>
+          {resolvedTitle && (
+            <h2
+              className={cn(
+                compact ? 'text-lg font-semibold' : 'text-xl font-semibold',
+                titleClassName
+              )}
+            >
+              {resolvedTitle}
+            </h2>
+          )}
+          {resolvedDescription && (
+            <p className={cn('text-sm text-gray-600 dark:text-gray-400', descriptionClassName)}>
+              {resolvedDescription}
+            </p>
+          )}
+        </div>
+      )}
 
-      <form onSubmit={onSubmit} className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
-        <label htmlFor="newsletter-email" className="sr-only">
+      {beforeForm}
+
+      <form
+        onSubmit={onSubmit}
+        className={cn('mt-4 flex flex-col gap-3 sm:flex-row sm:items-center', formClassName)}
+      >
+        <label htmlFor={inputId} className="sr-only">
           Email address
         </label>
         <Input
-          id="newsletter-email"
+          id={inputId}
+          name="email"
           type="email"
           autoComplete="email"
           value={email}
@@ -92,23 +144,34 @@ export default function NewsletterForm({
           placeholder="you@example.com"
           disabled={state === 'submitting'}
           aria-invalid={state === 'error'}
+          className={inputClassName}
         />
-        <Button type="submit" disabled={state === 'submitting'}>
+        <Button
+          type="submit"
+          disabled={state === 'submitting'}
+          variant={buttonVariant}
+          size={buttonSize}
+          className={buttonClassName}
+        >
           {state === 'submitting' ? 'Subscribing...' : 'Subscribe'}
         </Button>
       </form>
 
       {state !== 'idle' && (
         <p
-          className={`mt-3 text-sm ${
+          className={cn(
+            'mt-3 text-sm',
             state === 'success'
               ? 'text-green-700 dark:text-green-400'
-              : 'text-red-700 dark:text-red-400'
-          }`}
+              : 'text-red-700 dark:text-red-400',
+            statusClassName
+          )}
         >
           {message}
         </p>
       )}
+
+      {afterForm}
     </div>
   )
 }

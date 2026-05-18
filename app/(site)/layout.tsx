@@ -3,6 +3,7 @@ import 'pliny/search/algolia.css'
 import 'remark-github-blockquote-alert/alert.css'
 
 import { Space_Grotesk } from 'next/font/google'
+import Script from 'next/script'
 import { Analytics, AnalyticsConfig } from 'pliny/analytics'
 import { SearchProvider, SearchConfig } from 'pliny/search'
 import Header from '@/components/Header'
@@ -62,8 +63,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang={siteMetadata.language} className={space_grotesk.variable} suppressHydrationWarning>
       <head>
-        {/* Keep only the favicon.ico reference */}
-        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" href="/static/favicons/favicon.ico" sizes="any" />
 
         {/* TODO: Add custom favicons to replace these hidden references */}
         {/* 
@@ -87,6 +87,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </SearchProvider>
             <Footer />
           </SectionContainer>
+          {process.env.NODE_ENV === 'development' && <Script src="https://ui.sh/ui-picker.js" />}
         </ThemeProviders>
       </body>
     </html>

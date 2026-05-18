@@ -7,6 +7,7 @@ import PageTitle from '@/components/PageTitle'
 import SectionContainer from '@/components/SectionContainer'
 import siteMetadata from '@/data/siteMetadata'
 import ScrollTopAndComment from '@/components/ScrollTopAndComment'
+import PostSubscribeBox from '@/components/PostSubscribeBox'
 import type { SitePost, SitePostLink } from 'src/payload/types'
 
 interface LayoutProps {
@@ -36,6 +37,7 @@ export default function PostMinimal({ content, next, prev, children }: LayoutPro
             </div>
             <div className="relative pt-10">
               <PageTitle>{title}</PageTitle>
+              <PostSubscribeBox />
             </div>
           </div>
           <div className="prose dark:prose-invert max-w-none py-4">{children}</div>

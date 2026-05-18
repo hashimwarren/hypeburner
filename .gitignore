@@ -12,9 +12,13 @@
 # testing
 /coverage
 test-results/
+/dogfood-output/report.md
+/dogfood-output/screenshots/
+/dogfood-output/videos/
 
 # playwright
 /playwright-report/
+/.playwright-mcp/
 
 # backup files
 *.backup
@@ -49,6 +53,7 @@ yarn-error.log*
 .env.development.local
 .env.test.local
 .env.production.local
+.env.local.backup-*
 
 # Contentlayer
 .contentlayer
