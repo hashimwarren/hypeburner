@@ -53,8 +53,9 @@ export default function NewsletterForm({
   beforeForm,
   afterForm,
 }: NewsletterFormProps) {
-  const resolvedTitle = title ?? 'Subscribe to the newsletter'
-  const resolvedDescription = description ?? 'Get new posts and launch breakdowns in your inbox.'
+  const resolvedTitle = title === undefined ? 'Subscribe to the newsletter' : title
+  const resolvedDescription =
+    description === undefined ? 'Get new posts and launch breakdowns in your inbox.' : description
   const [email, setEmail] = useState('')
   const [state, setState] = useState<SubmitState>('idle')
   const [message, setMessage] = useState('')
