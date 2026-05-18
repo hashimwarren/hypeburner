@@ -10,6 +10,17 @@ const ErrorCodes = {
   REQUEST_PROCESSING: 'ERR_REQUEST_PROCESSING',
 } as const
 
+const CONTACT_FORM_FROM = process.env.CONTACT_FORM_FROM || 'Hypeburner <hello@hypeburner.com>'
+
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
 export async function POST(request: Request) {
   // Environment variable validation
   if (!process.env.RESEND_API_KEY) {
@@ -37,7 +48,12 @@ export async function POST(request: Request) {
   try {
     // Instantiate Resend lazily to avoid build-time env access
     const resend = new Resend(process.env.RESEND_API_KEY)
-    const { name, email, message } = await request.json()
+    const payload = await request.json()
+    const name = String(payload?.name || '').trim()
+    const email = String(payload?.email || '')
+      .trim()
+      .toLowerCase()
+    const message = String(payload?.message || '').trim()
 
     // Validate required fields
     if (!name || !email || !message) {
@@ -64,22 +80,43 @@ export async function POST(request: Request) {
       )
     }
 
+    const escapedName = escapeHtml(name)
+    const escapedEmail = escapeHtml(email)
+    const escapedMessageHtml = escapeHtml(message).replace(/\n/g, '<br />')
+    const text = [
+      'New Contact Form Submission',
+      '',
+      `Name: ${name}`,
+      `Email: ${email}`,
+      '',
+      'Message:',
+      message,
+    ].join('\n')
+
     const emailHtml = `
       <div>
         <h1>New Contact Form Submission</h1>
-        <p><strong>Name:</strong> ${name}</p>
-        <p><strong>Email:</strong> ${email}</p>
+        <p><strong>Name:</strong> ${escapedName}</p>
+        <p><strong>Email:</strong> ${escapedEmail}</p>
         <p><strong>Message:</strong></p>
-        <p>${message}</p>
+        <p>${escapedMessageHtml}</p>
       </div>
     `
 
-    const { data, error } = await resend.emails.send({
-      from: 'Contact Form <onboarding@resend.dev>',
-      to: process.env.CONTACT_FORM_RECIPIENT!,
-      subject: 'New Contact Form Submission',
-      html: emailHtml,
-    })
+    const { data, error } = await resend.emails.send(
+      {
+        from: CONTACT_FORM_FROM,
+        to: process.env.CONTACT_FORM_RECIPIENT!,
+        subject: `New services inquiry from ${name}`,
+        html: emailHtml,
+        text,
+        replyTo: [email],
+        tags: [{ name: 'source', value: 'contact_form' }],
+      },
+      {
+        idempotencyKey: `contact-form/${email}/${Date.now()}`,
+      }
+    )
 
     if (error) {
       console.error('Error sending email:', error)
