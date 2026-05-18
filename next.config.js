@@ -2,9 +2,17 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
   enabled: process.env.ANALYZE === 'true',
 })
 
-const scriptHosts = new Set(['giscus.app', 'analytics.umami.is'])
+const scriptHosts = new Set(['giscus.app', 'analytics.umami.is', 'cloud.umami.is'])
+if (process.env.NODE_ENV === 'development') {
+  scriptHosts.add('ui.sh')
+}
 const frameHosts = new Set(['giscus.app'])
-const connectHosts = new Set(['api.resend.com', 'fonts.googleapis.com', 'analytics.umami.is'])
+const connectHosts = new Set([
+  'api.resend.com',
+  'fonts.googleapis.com',
+  'analytics.umami.is',
+  'cloud.umami.is',
+])
 const imgHosts = ['*', 'blob:', 'data:']
 
 const ContentSecurityPolicy = `

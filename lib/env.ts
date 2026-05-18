@@ -49,6 +49,7 @@ const envSchema = z.object({
     .trim()
     .email('CONTACT_FORM_RECIPIENT must be an email')
     .optional(),
+  CONTACT_FORM_FROM: z.string().trim().optional(),
   NODE_ENV: z
     .enum(['development', 'test', 'production'])
     .default(process.env.NODE_ENV || 'development'),
