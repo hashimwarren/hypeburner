@@ -8,6 +8,7 @@ import { getAllPosts, getTagCounts } from 'lib/cms'
 const POSTS_PER_PAGE = 5
 
 export const dynamic = 'force-static'
+export const revalidate = 3600
 
 export async function generateMetadata(props: {
   params: Promise<{ tag: string }>

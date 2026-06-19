@@ -174,21 +174,24 @@ export async function generateCmsArtifacts(options = {}) {
   const posts = Array.isArray(options.posts) ? options.posts : await getPublishedPosts()
   const tagData = buildTagData(posts)
   const searchDocuments = posts
+  const skipSearchIndex = options.skipSearchIndex === true
 
   const appPath = path.join(rootDir, 'app', 'tag-data.json')
   const publicDir = path.join(rootDir, outputFolder)
   const searchPath = path.join(publicDir, resolveSearchPath())
 
   mkdirSync(path.dirname(appPath), { recursive: true })
-  mkdirSync(publicDir, { recursive: true })
 
   writeFileSync(appPath, `${JSON.stringify(tagData, null, 2)}\n`)
-  writeFileSync(searchPath, JSON.stringify(searchDocuments))
+  if (!skipSearchIndex) {
+    mkdirSync(publicDir, { recursive: true })
+    writeFileSync(searchPath, JSON.stringify(searchDocuments))
+  }
 
   return {
     postCount: posts.length,
     tagCount: Object.keys(tagData).length,
-    searchPath: path.relative(rootDir, searchPath),
+    searchPath: skipSearchIndex ? null : path.relative(rootDir, searchPath),
   }
 }
 
@@ -201,7 +204,9 @@ if (isDirectRun) {
       console.log(
         `[artifacts] generated tag-data + search index for ${result.postCount} posts (${result.tagCount} unique tags)`
       )
-      console.log(`[artifacts] wrote ${result.searchPath}`)
+      if (result.searchPath) {
+        console.log(`[artifacts] wrote ${result.searchPath}`)
+      }
       process.exit(0)
     })
     .catch((error) => {

@@ -3,6 +3,7 @@ import siteMetadata from '@/data/siteMetadata'
 import { getAllPosts } from 'lib/cms'
 
 export const dynamic = 'force-static'
+export const revalidate = 3600
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const siteUrl = siteMetadata.siteUrl

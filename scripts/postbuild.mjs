@@ -3,8 +3,13 @@ import { generateCmsArtifacts, getPublishedPosts } from './generate-cms-artifact
 
 async function postbuild() {
   const posts = await getPublishedPosts()
-  await rss({ posts })
-  await generateCmsArtifacts({ posts })
+  if (process.env.EXPORT) {
+    await rss({ posts })
+    await generateCmsArtifacts({ posts })
+    return
+  }
+
+  await generateCmsArtifacts({ posts, skipSearchIndex: true })
 }
 
 postbuild()

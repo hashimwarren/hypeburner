@@ -5,6 +5,7 @@ import { genPageMetadata } from 'app/seo'
 import { getTagCounts } from 'lib/cms'
 
 export const dynamic = 'force-static'
+export const revalidate = 3600
 export const metadata = genPageMetadata({ title: 'Tags', description: 'Things I blog about' })
 
 export default async function Page() {
