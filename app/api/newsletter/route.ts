@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server'
 import { env } from 'lib/env'
 
-export const dynamic = 'force-dynamic'
-
 const ErrorCodes = {
   InvalidEmail: 'ERR_INVALID_EMAIL',
   MissingConfig: 'ERR_MISSING_ENV_VARS',

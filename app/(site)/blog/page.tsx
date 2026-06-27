@@ -5,6 +5,7 @@ import { getAllPosts, getTagCounts } from 'lib/cms'
 const POSTS_PER_PAGE = 5
 
 export const dynamic = 'force-static'
+export const revalidate = 3600
 export const metadata = genPageMetadata({ title: 'Blog' })
 
 export default async function BlogPage(props: { searchParams: Promise<{ page: string }> }) {
