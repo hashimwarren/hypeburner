@@ -6,6 +6,9 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: read
+
 jobs:
   test:
     timeout-minutes: 60
@@ -14,8 +17,6 @@ jobs:
       github.event_name != 'pull_request' ||
       github.event.pull_request.head.repo.full_name == github.repository
     env:
-      DATABASE_URI: ${{ secrets.DATABASE_URI }}
-      PAYLOAD_SECRET: ${{ secrets.PAYLOAD_SECRET }}
       NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL }}
 
     steps:
@@ -34,9 +35,15 @@ jobs:
         run: npx playwright install --with-deps
 
       - name: Build Next.js app
+        env:
+          DATABASE_URI: ${{ secrets.DATABASE_URI }}
+          PAYLOAD_SECRET: ${{ secrets.PAYLOAD_SECRET }}
         run: yarn build
 
       - name: Start Next.js app
+        env:
+          DATABASE_URI: ${{ secrets.DATABASE_URI }}
+          PAYLOAD_SECRET: ${{ secrets.PAYLOAD_SECRET }}
         run: yarn serve &
 
       - name: Wait for server
