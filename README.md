@@ -28,6 +28,7 @@ The goal is to fail fast when required values are missing and keep local, previe
 - `PAYLOAD_QUERY_LIMIT` (default: `1000`)
 - `POLAR_ACCESS_TOKEN`
 - `POLAR_WEBHOOK_SECRET`
+- `POLAR_SERVER`
 - `POLAR_PRODUCT_ID_MONTHLY`
 - `POLAR_PRODUCT_ID_ANNUAL`
 - `POLAR_API_BASE_URL` (default: `https://api.polar.sh`)
@@ -53,13 +54,21 @@ The goal is to fail fast when required values are missing and keep local, previe
 
 ## Polar API routes
 
-Launch billing entry points:
+The SDK integration uses these entry points:
+
+- `GET /checkout?products=<product-id>` redirects to Polar's hosted checkout.
+- `POST /api/webhook/polar` verifies Polar signatures and acknowledges events with TODO handlers.
+
+See [POLAR_SETUP.md](POLAR_SETUP.md) for provisioned products, local verification, and deployment steps.
+The SDK client reads `POLAR_SERVER` to select production or sandbox.
+
+Existing legacy endpoints are retained separately; this setup does not register their webhook:
 
 - `POST /api/polar/checkout`
 - `POST /api/polar/portal`
 - `POST /api/polar/webhook`
 
-Response contract:
+Legacy response contract:
 
 - Success: `{ ok: true, code: "OK", ... }`
 - Failure: `{ ok: false, code: "ERR_*", message: string, details?: unknown }`

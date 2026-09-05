@@ -5,7 +5,7 @@
   "scripts": {
     "start": "next start",
     "dev": "next dev --webpack",
-    "build": "node ./scripts/check-runtime-cms-only.mjs && next build --webpack && cross-env NODE_OPTIONS=--experimental-json-modules node ./scripts/postbuild.mjs",
+    "build": "node ./scripts/check-runtime-cms-only.mjs && next build --webpack && cross-env NODE_ENV=production NODE_OPTIONS=--experimental-json-modules node ./scripts/postbuild.mjs",
     "serve": "next start",
     "migrate:payload": "node ./scripts/migrate-mdx-to-payload.mjs --dry-run --report ./scripts/reports/migration-report.json",
     "migrate:payload:apply": "node ./scripts/migrate-mdx-to-payload.mjs --apply --strict --report ./scripts/reports/migration-report.json",
@@ -34,6 +34,7 @@
     "@payloadcms/db-postgres": "^3.0.0",
     "@payloadcms/next": "^3.0.0",
     "@payloadcms/richtext-lexical": "^3.0.0",
+    "@polar-sh/sdk": "^0.49.0",
     "@radix-ui/react-slot": "^1.2.3",
     "@tailwindcss/forms": "^0.5.9",
     "@tailwindcss/postcss": "^4.0.5",

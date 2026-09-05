@@ -1,5 +1,7 @@
+export {}
+
 type PolarServerMock = {
-  PolarConfigError: typeof Error
+  PolarConfigError: new (message: string) => Error
   PolarUpstreamError: new (message: string, status: number, payload: unknown) => Error
   PolarErrorCodes: Record<string, string>
   getPayloadClient: jest.Mock
