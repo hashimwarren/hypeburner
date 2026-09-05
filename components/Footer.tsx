@@ -2,6 +2,10 @@ import Link from './Link'
 import siteMetadata from '@/data/siteMetadata'
 import SocialIcon from './social-icons'
 
+/**
+ * Renders the site footer with author information, copyright notice, site link, and RSS feed link.
+ * @returns The footer component
+ */
 export default function Footer() {
   return (
     <footer role="contentinfo">
