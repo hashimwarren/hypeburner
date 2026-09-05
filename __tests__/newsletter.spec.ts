@@ -17,11 +17,12 @@ test.describe('Newsletter Form', () => {
     })
 
     await page.goto(homePage)
-    await expect(page.locator('#newsletter-email')).toBeVisible()
-    await page.fill('#newsletter-email', 'reader@example.com')
-    await page.click('button:has-text("Subscribe")')
+    const email = page.locator('#home-newsletter-email-top')
+    const newsletterSection = email.locator('../..')
+    await expect(email).toBeVisible()
+    await email.fill('reader@example.com')
+    await newsletterSection.getByRole('button', { name: 'Subscribe', exact: true }).click()
 
-    const newsletterSection = page.locator('#newsletter-email').locator('../..')
     await expect(
       newsletterSection.getByText('You are subscribed. Welcome to the newsletter.', { exact: true })
     ).toBeVisible({
@@ -29,18 +30,26 @@ test.describe('Newsletter Form', () => {
     })
   })
 
-  test('shows validation message for invalid email', async ({ page }) => {
-    await page.goto(homePage)
-    await expect(page.locator('#newsletter-email')).toBeVisible()
-    await page.fill('#newsletter-email', 'bad-email')
-    await page.click('button:has-text("Subscribe")')
-
-    const newsletterSection = page.locator('#newsletter-email').locator('../..')
-    await expect(
-      newsletterSection.getByText('Please enter a valid email address.', { exact: true })
-    ).toBeVisible({
-      timeout: 10000,
+  test('blocks invalid email with browser validation without submitting', async ({ page }) => {
+    let subscriptionRequests = 0
+    await page.route('**/api/newsletter', async (route) => {
+      subscriptionRequests += 1
+      await route.abort()
     })
+
+    await page.goto(homePage)
+    const email = page.locator('#home-newsletter-email-top')
+    const newsletterSection = email.locator('../..')
+    await expect(email).toBeVisible()
+    await email.fill('bad-email')
+    await newsletterSection.getByRole('button', { name: 'Subscribe', exact: true }).click()
+
+    await expect(email).toBeFocused()
+    expect(await email.evaluate((input: HTMLInputElement) => input.validity.typeMismatch)).toBe(
+      true
+    )
+    expect(await email.evaluate((input: HTMLInputElement) => input.validationMessage)).not.toBe('')
+    expect(subscriptionRequests).toBe(0)
   })
 
   test('shows actionable message when API fails', async ({ page }) => {
@@ -57,11 +66,12 @@ test.describe('Newsletter Form', () => {
     })
 
     await page.goto(homePage)
-    await expect(page.locator('#newsletter-email')).toBeVisible()
-    await page.fill('#newsletter-email', 'reader@example.com')
-    await page.click('button:has-text("Subscribe")')
+    const email = page.locator('#home-newsletter-email-top')
+    const newsletterSection = email.locator('../..')
+    await expect(email).toBeVisible()
+    await email.fill('reader@example.com')
+    await newsletterSection.getByRole('button', { name: 'Subscribe', exact: true }).click()
 
-    const newsletterSection = page.locator('#newsletter-email').locator('../..')
     await expect(
       newsletterSection.getByText(
         "We couldn't subscribe you right now. Please try again shortly.",

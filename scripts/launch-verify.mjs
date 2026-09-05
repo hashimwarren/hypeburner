@@ -10,6 +10,7 @@ const yarnBin = 'yarn'
 const apiTestFiles = [
   '__tests__/api/polar-signature.test.ts',
   '__tests__/api/polar-routes.test.ts',
+  '__tests__/api/polar-sdk-routes.test.ts',
   '__tests__/api/newsletter.test.ts',
   '__tests__/api/contact.test.ts',
 ]
