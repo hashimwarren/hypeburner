@@ -4,7 +4,7 @@ import SocialIcon from './social-icons'
 
 export default function Footer() {
   return (
-    <footer>
+    <footer role="contentinfo">
       <div className="mt-16 flex flex-col items-center">
         {/* TODO: Add social media links when profiles are ready */}
         {/*
