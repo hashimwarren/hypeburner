@@ -95,7 +95,7 @@ for (const viewport of [
           await expectUnclipped(toggle)
           await tabTo(page, toggle)
           await page.keyboard.press('Enter')
-          await expect(dialog).toBeVisible()
+          await expect(dialog.getByRole('navigation')).toBeVisible()
           await expect(dialog.getByRole('link', { name: 'Home', exact: true })).toHaveAttribute(
             'href',
             '/'
@@ -139,7 +139,7 @@ for (const viewport of [
         await page.keyboard.press('Enter')
         await expect(page).toHaveURL((url) => url.pathname === '/blog')
         await expect(page.getByRole('heading', { name: 'All Posts', exact: true })).toBeVisible()
-        if (mobile) await expect(dialog).toBeHidden()
+        if (mobile) await expect(dialog.getByRole('navigation')).toBeHidden()
       })
     }
   })
