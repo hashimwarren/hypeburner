@@ -44,6 +44,8 @@ The goal is to fail fast when required values are missing and keep local, previe
 
 ## Deployment checklist
 
+Deploy to Vercel or another host that runs the Next.js server. Checkout, webhooks, and Payload CMS require server routes, so the full application cannot use GitHub Pages or `EXPORT=1`. The obsolete automatic Pages workflow has been removed.
+
 1. Populate environment variables and commit no secret values.
 2. Run:
    - `yarn env:check`
@@ -57,7 +59,7 @@ The goal is to fail fast when required values are missing and keep local, previe
 The SDK integration uses these entry points:
 
 - `GET /checkout?products=<product-id>` redirects to Polar's hosted checkout.
-- `POST /api/webhook/polar` verifies Polar signatures and acknowledges events with TODO handlers.
+- `POST /api/webhook/polar` is the registered webhook endpoint. It uses SDK `validateEvent` with the raw body and `webhook-id`, `webhook-timestamp`, and `webhook-signature` headers. Missing configuration returns 503, failed verification 403, and invalid signed payloads 400. Its TODO handlers acknowledge valid events without persisting data or granting access.
 
 See [POLAR_SETUP.md](POLAR_SETUP.md) for provisioned products, local verification, and deployment steps.
 The SDK client reads `POLAR_SERVER` to select production or sandbox.

@@ -7,7 +7,7 @@ This integration uses **live Polar production**, not the sandbox. The Polar acco
 ## Routes
 
 - `GET /checkout?products=<product-id>` creates a checkout and sends a non-cacheable 302 redirect to Polar. Repeat `products` to offer multiple products. Missing or invalid UUIDs return 400.
-- `POST /api/webhook/polar` verifies the untouched request body and all three Standard Webhooks headers with `validateEvent`. Invalid signatures return 403; invalid signed payloads return 400; missing configuration returns 503.
+- `POST /api/webhook/polar` is the registered endpoint. It verifies the untouched request body and the `webhook-id`, `webhook-timestamp`, and `webhook-signature` headers with `validateEvent`. Invalid signatures return 403; invalid signed payloads return 400; missing configuration returns 503.
 - `order.paid` and `customer.state_changed` have TODO handlers only. They acknowledge valid events without granting access or writing to the database. Add delivery deduplication using `webhook-id` when implementing fulfillment.
 
 Polar provides the hosted payment confirmation. No custom success URL or confirmation page was added.
@@ -26,7 +26,7 @@ The Git-ignored `.env` contains these keys (values intentionally omitted):
 
 The existing credential entries were consolidated from `.env.local` into `.env` so they do not shadow the saved credentials. Product mapping entries in `.env.local` remain unchanged. The new checkout uses its product query parameter.
 
-Next.js loads the environment files. The SDK client validates its configuration on first use and is reused. Changing the selected Polar environment requires the corresponding credentials/products and restarting the app.
+Next.js loads the environment files. The SDK client validates its configuration on first use, is reused, and limits API requests to 10 seconds. Changing the selected Polar environment requires the corresponding credentials/products and restarting the app.
 
 ## Provisioned resources
 

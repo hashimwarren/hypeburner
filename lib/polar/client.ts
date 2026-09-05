@@ -17,7 +17,7 @@ export function getPolar(): Polar {
     throw new PolarConfigurationError('POLAR_SERVER must be production or sandbox')
   }
 
-  polar = new Polar({ accessToken, server })
+  polar = new Polar({ accessToken, server, timeoutMs: 10_000 })
   return polar
 }
 
