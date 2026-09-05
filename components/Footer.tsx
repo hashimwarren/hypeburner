@@ -17,14 +17,26 @@ export default function Footer() {
           )}
         </div>
         */}
-        <div className="mb-2 flex space-x-2 text-sm text-gray-500 dark:text-gray-400">
+        <div className="mb-2 flex flex-wrap justify-center gap-x-2 text-sm text-gray-500 dark:text-gray-400">
           <div>{siteMetadata.author}</div>
-          <div>{` • `}</div>
-          <div>{`© ${new Date().getFullYear()}`}</div>
-          <div>{` • `}</div>
-          <Link href="/">{siteMetadata.title}</Link>
+          <div className="flex gap-x-2 whitespace-nowrap">
+            <span aria-hidden="true">•</span>
+            <span>{`© ${new Date().getFullYear()}`}</span>
+          </div>
+          <div className="flex gap-x-2 whitespace-nowrap">
+            <span aria-hidden="true">•</span>
+            <Link href="/">{siteMetadata.title}</Link>
+          </div>
         </div>
-        <div className="mb-8 text-sm text-gray-500 dark:text-gray-400">
+        <div className="mb-2 text-sm text-gray-500 dark:text-gray-400">
+          <a
+            href="/feed.xml"
+            className="underline underline-offset-4 focus-visible:outline-offset-4"
+          >
+            RSS
+          </a>
+        </div>
+        <div className="mb-8 text-center text-sm text-gray-500 dark:text-gray-400">
           Built with Codex and coffee in North Carolina
         </div>
       </div>
