@@ -5,6 +5,33 @@ import SectionContainer from '@/components/SectionContainer'
 import siteMetadata from '@/data/siteMetadata'
 
 describe('Footer', () => {
+  const originalBasePath = process.env.BASE_PATH
+
+  beforeEach(() => {
+    delete process.env.BASE_PATH
+  })
+
+  afterEach(() => {
+    if (originalBasePath === undefined) delete process.env.BASE_PATH
+    else process.env.BASE_PATH = originalBasePath
+  })
+
+  it.each([
+    [undefined, '/feed.xml'],
+    ['', '/feed.xml'],
+    ['/blog', '/blog/feed.xml'],
+    ['/nested/blog', '/nested/blog/feed.xml'],
+  ])('uses the native RSS destination for BASE_PATH=%s', (basePath, href) => {
+    if (basePath !== undefined) process.env.BASE_PATH = basePath
+    render(<Footer />, { wrapper: SectionContainer })
+
+    const rss = within(screen.getByRole('contentinfo')).getByRole('link', { name: 'RSS' })
+    expect(rss.tagName).toBe('A')
+    expect(rss).toHaveAttribute('href', href)
+    expect(rss).not.toHaveAttribute('target')
+    expect(rss).not.toHaveAttribute('download')
+  })
+
   it('retains the page-footer landmark inside the real site SectionContainer', () => {
     render(
       <SectionContainer>

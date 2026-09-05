@@ -30,7 +30,7 @@ export default function Footer() {
         </div>
         <div className="mb-2 text-sm text-gray-500 dark:text-gray-400">
           <a
-            href="/feed.xml"
+            href={`${process.env.BASE_PATH || ''}/feed.xml`}
             className="underline underline-offset-4 focus-visible:outline-offset-4"
           >
             RSS
