@@ -10,6 +10,13 @@ jobs:
   test:
     timeout-minutes: 60
     runs-on: ubuntu-latest
+    if: |
+      github.event_name != 'pull_request' ||
+      github.event.pull_request.head.repo.full_name == github.repository
+    env:
+      DATABASE_URI: ${{ secrets.DATABASE_URI }}
+      PAYLOAD_SECRET: ${{ secrets.PAYLOAD_SECRET }}
+      NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL }}
 
     steps:
       - uses: actions/checkout@v4
@@ -22,6 +29,9 @@ jobs:
 
       - name: Install dependencies
         run: yarn install
+
+      - name: Run footer and RSS unit tests (forced exit; open handles reported)
+        run: yarn jest --runTestsByPath __tests__/footer.test.tsx __tests__/cms-artifacts.test.ts --ci --runInBand --detectOpenHandles --forceExit
 
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
