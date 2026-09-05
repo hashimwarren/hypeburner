@@ -138,7 +138,9 @@ for (const viewport of [
 
         await page.keyboard.press('Enter')
         await expect(page).toHaveURL((url) => url.pathname === '/blog')
-        await expect(page.getByRole('heading', { name: 'All Posts', exact: true })).toBeVisible()
+        await expect(
+          page.getByRole('heading', { level: 1, name: 'All Posts', exact: true })
+        ).toBeVisible()
         if (mobile) await expect(dialog.getByRole('navigation')).toBeHidden()
       })
     }
