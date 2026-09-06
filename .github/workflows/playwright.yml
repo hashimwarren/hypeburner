@@ -31,6 +31,9 @@ jobs:
       - name: Install dependencies
         run: yarn install
 
+      - name: Run footer and RSS unit tests (forced exit; open handles reported)
+        run: yarn jest --runTestsByPath __tests__/footer.test.tsx __tests__/cms-artifacts.test.ts --ci --runInBand --detectOpenHandles --forceExit
+
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
 
