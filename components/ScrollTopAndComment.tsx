@@ -13,6 +13,7 @@ const ScrollTopAndComment = () => {
     }
 
     window.addEventListener('scroll', handleWindowScroll)
+    handleWindowScroll()
     return () => window.removeEventListener('scroll', handleWindowScroll)
   }, [])
 
@@ -24,13 +25,13 @@ const ScrollTopAndComment = () => {
   }
   return (
     <div
-      className={`fixed right-8 bottom-8 hidden flex-col gap-3 ${show ? 'md:flex' : 'md:hidden'}`}
+      className={`fixed right-[calc(1rem+env(safe-area-inset-right))] bottom-[calc(1rem+env(safe-area-inset-bottom))] z-20 flex-col gap-3 md:right-8 md:bottom-8 md:z-auto ${show ? 'flex' : 'hidden'}`}
     >
       {siteMetadata.comments?.provider && (
         <button
           aria-label="Scroll To Comment"
           onClick={handleScrollToComment}
-          className="rounded-full bg-gray-200 p-2 text-gray-500 transition-all hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-400 dark:hover:bg-gray-600"
+          className="hidden rounded-full bg-gray-200 p-2 text-gray-500 transition-all hover:bg-gray-300 md:block dark:bg-gray-700 dark:text-gray-400 dark:hover:bg-gray-600"
         >
           <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
             <path
@@ -44,7 +45,7 @@ const ScrollTopAndComment = () => {
       <button
         aria-label="Scroll To Top"
         onClick={handleScrollTop}
-        className="rounded-full bg-gray-200 p-2 text-gray-500 transition-all hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-400 dark:hover:bg-gray-600"
+        className="rounded-full bg-gray-200 p-3 text-gray-500 transition-all hover:bg-gray-300 md:p-2 dark:bg-gray-700 dark:text-gray-400 dark:hover:bg-gray-600"
       >
         <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
           <path
