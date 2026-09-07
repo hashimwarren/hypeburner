@@ -150,27 +150,67 @@ for (const theme of ['light', 'dark'] as const) {
       await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0)
       await expect(top).toBeHidden()
       const afterHiding = await page.evaluate(() => document.activeElement?.outerHTML)
+      const unfocusedShadows = await page.evaluateHandle(
+        () =>
+          new Map(
+            Array.from(document.querySelectorAll('a[href], button, input, select, textarea')).map(
+              (element) => [element, getComputedStyle(element).boxShadow]
+            )
+          )
+      )
       await page.keyboard.press('Tab')
       const nextFocus = page.locator(':focus')
       await expect(nextFocus).toBeVisible()
       await expect(nextFocus).toBeEnabled()
       await expect(top).not.toBeFocused()
       await expect(async () => {
-        const focus = await nextFocus.evaluate((element) => ({
-          operable: element.matches('a[href], button, input, select, textarea'),
-          visible: element.matches(':focus-visible'),
-          outline: parseFloat(getComputedStyle(element).outlineWidth),
-        }))
+        const focus = await nextFocus.evaluate((element, unfocusedShadows) => {
+          const style = getComputedStyle(element)
+          const transparent = /transparent|rgba\([^)]*,\s*0(?:\.0+)?\)|\/\s*0(?:\.0+)?%?\s*\)/
+          const outline =
+            parseFloat(style.outlineWidth) > 0 &&
+            !['none', 'hidden'].includes(style.outlineStyle) &&
+            !transparent.test(style.outlineColor)
+          // A ring must appear on focus and extend beyond its offset; a permanent shadow is not enough.
+          const ring =
+            unfocusedShadows.has(element) &&
+            style.boxShadow !== unfocusedShadows.get(element) &&
+            style.boxShadow.split(/,(?![^(]*\))/).some((shadow) => {
+              const spread = shadow.match(/ 0px 0px 0px ([\d.]+)px$/)
+              return (
+                spread !== null &&
+                !unfocusedShadows.get(element)?.includes(shadow.trim()) &&
+                Number(spread[1]) >
+                  parseFloat(style.getPropertyValue('--tw-ring-offset-width') || '0') &&
+                !transparent.test(shadow)
+              )
+            })
+          return {
+            operable: element.matches('a[href], button, input, select, textarea'),
+            visible: element.matches(':focus-visible'),
+            indicator: outline || ring,
+          }
+        }, unfocusedShadows)
         expect(focus.operable).toBe(true)
         expect(focus.visible).toBe(true)
-        expect(focus.outline).toBeGreaterThan(0)
+        expect(focus.indicator).toBe(true)
       }).toPass({ timeout: 5000 })
+      await unfocusedShadows.dispose()
       await testInfo.attach('focus-after-hiding', {
         body: JSON.stringify({
           afterHiding,
-          afterTab: await nextFocus.evaluate((e) => e.outerHTML),
+          afterTab: await nextFocus.evaluate((e) => ({
+            html: e.outerHTML,
+            focusVisible: e.matches(':focus-visible'),
+            outline: getComputedStyle(e).outline,
+            boxShadow: getComputedStyle(e).boxShadow,
+          })),
         }),
         contentType: 'application/json',
+      })
+      await testInfo.attach('focus-after-hiding-visible', {
+        body: await page.screenshot(),
+        contentType: 'image/png',
       })
 
       if (width >= 768) {
