@@ -92,7 +92,8 @@
     padding-right: calc(3.25rem + env(safe-area-inset-right));
   }
 
-  main:has([data-article-scroll-controls]) article .prose a {
+  main:has([data-article-scroll-controls]) article .prose a,
+  main:has([data-article-scroll-controls]) article .prose p {
     overflow-wrap: anywhere;
   }
 }
