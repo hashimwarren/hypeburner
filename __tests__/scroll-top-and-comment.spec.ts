@@ -223,11 +223,32 @@ for (const theme of ['light', 'dark'] as const) {
       // Real reload restoration is supplementary; deterministic pre-mount state is tested in Jest.
       await page.evaluate(() => window.scrollTo({ top: 400, behavior: 'instant' }))
       await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(400)
+      const beforeReload = await page.evaluate(() => window.scrollY)
       const reload = await page.reload()
       expect(reload?.status()).toBe(200)
-      await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(400)
-      await expect(top).toBeVisible()
       await page.evaluate(() => document.fonts.ready)
+      // CI restores 2–3px away at some widths; allow 4px, not a lost scroll position.
+      const restorationTolerance = 4
+      let afterReload = await page.evaluate(() => window.scrollY)
+      try {
+        await expect
+          .poll(async () => {
+            afterReload = await page.evaluate(() => window.scrollY)
+            return Math.abs(afterReload - beforeReload)
+          })
+          .toBeLessThanOrEqual(restorationTolerance)
+        await expect(top).toBeVisible()
+      } finally {
+        await testInfo.attach('reload-restoration', {
+          body: JSON.stringify({
+            beforeReload,
+            afterReload,
+            delta: afterReload - beforeReload,
+            tolerance: restorationTolerance,
+          }),
+          contentType: 'application/json',
+        })
+      }
       await top.click()
       await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0)
 
