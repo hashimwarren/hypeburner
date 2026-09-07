@@ -6,7 +6,7 @@ function post(overrides: Partial<CmsPost>): CmsPost {
     id: overrides.slug || 'post',
     slug: overrides.slug || 'post',
     path: `blog/${overrides.slug || 'post'}`,
-    filePath: `blog/${overrides.slug || 'post'}.mdx`,
+    filePath: '',
     title: overrides.title || 'Post',
     summary: overrides.summary || '',
     date: overrides.date || '2026-01-01T12:00:00.000Z',
@@ -50,6 +50,24 @@ describe('CMS artifacts', () => {
     expect(buildSearchDocuments(posts)).not.toEqual(
       expect.arrayContaining([expect.objectContaining({ slug: 'news/draft-post' })])
     )
+  })
+
+  it.each([
+    [undefined, ''],
+    ['', ''],
+    ['blog/../post.mdx', ''],
+    ['data/blog/news/legacy.mdx', 'blog/news/legacy.mdx'],
+    ['blog/legacy.md', 'blog/legacy.md'],
+  ])('derives search provenance only from %p', (legacySourcePath, expected) => {
+    const documents = buildSearchDocuments([
+      post({ slug: 'news/post', filePath: 'blog/stale.mdx', legacySourcePath }),
+    ])
+    expect(documents[0]).toMatchObject({
+      slug: 'news/post',
+      path: 'blog/news/post',
+      filePath: expected,
+    })
+    expect(JSON.parse(JSON.stringify(documents))[0].filePath).toBe(expected)
   })
 
   it('builds RSS from published posts only', () => {

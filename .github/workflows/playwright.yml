@@ -21,6 +21,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -31,8 +33,8 @@ jobs:
       - name: Install dependencies
         run: yarn install
 
-      - name: Run footer, RSS, and scroll-control unit tests (forced exit; open handles reported)
-        run: yarn jest --runTestsByPath __tests__/footer.test.tsx __tests__/cms-artifacts.test.ts __tests__/scroll-top-and-comment.test.tsx --ci --runInBand --detectOpenHandles --forceExit
+      - name: Run footer, CMS source, RSS, and scroll-control unit tests (forced exit; open handles reported)
+        run: yarn jest --runTestsByPath __tests__/footer.test.tsx __tests__/cms-artifacts.test.ts __tests__/cms-source-path.test.ts __tests__/cms-source-producers.test.ts __tests__/post-layout.test.tsx __tests__/scroll-top-and-comment.test.tsx --ci --runInBand --detectOpenHandles --forceExit
 
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
@@ -42,6 +44,9 @@ jobs:
           DATABASE_URI: ${{ secrets.DATABASE_URI }}
           PAYLOAD_SECRET: ${{ secrets.PAYLOAD_SECRET }}
         run: yarn build
+
+      - name: Typecheck project including test sources
+        run: yarn tsc --noEmit
 
       - name: Start Next.js app
         env:

@@ -1,4 +1,5 @@
 import { cache } from 'react'
+import normalizeSourcePath from './source-path'
 import { slug } from 'github-slugger'
 import { getPayload } from 'payload'
 import siteMetadata from '@/data/siteMetadata'
@@ -19,12 +20,6 @@ function withCmsErrorContext(
   collection?: string
 ): never {
   throw new CmsQueryError(message, { operation, collection }, cause)
-}
-
-function cleanLegacyPath(value: unknown, slugValue: string): string {
-  const raw = String(value || '').trim()
-  if (!raw) return `blog/${slugValue}.mdx`
-  return raw.replace(/^data\//, '')
 }
 
 function toStringArray(value: unknown): string[] {
@@ -74,13 +69,13 @@ function normalizePost(value: Record<string, unknown>): SitePost {
   const images = Array.isArray(value.images) ? toStringArray(value.images) : []
   const authors = Array.isArray(value.authors) ? value.authors.map(normalizeAuthor) : []
   const tags = toStringArray(value.tags)
-  const legacySourcePath = value.legacySourcePath ? String(value.legacySourcePath) : undefined
+  const legacySourcePath = normalizeSourcePath(value.legacySourcePath) || undefined
 
   return {
     id: (value.id as string | number | undefined) || slugValue,
     slug: slugValue,
     path: `blog/${slugValue}`,
-    filePath: cleanLegacyPath(legacySourcePath, slugValue),
+    filePath: legacySourcePath || '',
     title: String(value.title || slugValue),
     summary: String(value.summary || ''),
     date: publishedAt || createdAt,

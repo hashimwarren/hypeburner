@@ -10,7 +10,10 @@ import ScrollTopAndComment from '@/components/ScrollTopAndComment'
 import PostSubscribeBox from '@/components/PostSubscribeBox'
 import type { SiteAuthor, SitePost, SitePostLink } from 'src/payload/types'
 
-const editUrl = (path) => `${siteMetadata.siteRepo}/blob/main/data/${path}`
+import normalizeSourcePath from '../lib/cms/source-path'
+
+const editUrl = (path: string) =>
+  `${siteMetadata.siteRepo}/blob/main/data/${path.split('/').map(encodeURIComponent).join('/')}`
 const discussUrl = (path) =>
   `https://mobile.twitter.com/search?q=${encodeURIComponent(`${siteMetadata.siteUrl}/${path}`)}`
 
@@ -30,7 +33,8 @@ interface LayoutProps {
 }
 
 export default function PostLayout({ content, authorDetails, next, prev, children }: LayoutProps) {
-  const { filePath, path, slug, date, title, tags } = content
+  const { path, slug, date, title, tags } = content
+  const sourcePath = normalizeSourcePath(content.legacySourcePath)
   const basePath = path.split('/')[0]
 
   return (
@@ -102,8 +106,12 @@ export default function PostLayout({ content, authorDetails, next, prev, childre
                 <Link href={discussUrl(path)} rel="nofollow">
                   Discuss on Twitter
                 </Link>
-                {` • `}
-                <Link href={editUrl(filePath)}>View on GitHub</Link>
+                {sourcePath && (
+                  <>
+                    {` • `}
+                    <Link href={editUrl(sourcePath)}>View on GitHub</Link>
+                  </>
+                )}
               </div>
               {siteMetadata.comments && (
                 <div
