@@ -60,12 +60,16 @@ for (const width of [375, 639, 640, 1280]) {
                 return false
               }
             }
+            const style = getComputedStyle(element)
+            // Font ink may exceed the line box without clipping when overflow is visible.
             return (
-              element.scrollWidth <= element.clientWidth &&
-              element.scrollHeight <= element.clientHeight
+              (!/(auto|scroll|hidden|clip)/.test(style.overflowX) ||
+                element.scrollWidth <= element.clientWidth) &&
+              (!/(auto|scroll|hidden|clip)/.test(style.overflowY) ||
+                element.scrollHeight <= element.clientHeight)
             )
           }),
-          'The complete heading must fit within its box and clipping ancestors'
+          'The heading must not be clipped by its own overflow or clipping ancestors'
         ).toBe(true)
 
         const sidebar = page.locator('main .max-h-screen')
