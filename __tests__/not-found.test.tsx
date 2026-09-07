@@ -20,7 +20,7 @@ describe('Missing-page recovery', () => {
       ['Browse blog', '/blog'],
       ['Home', '/'],
     ]) {
-      const link = screen.getByRole('link', { name, exact: true })
+      const link = screen.getByRole('link', { name })
       expect(link.tagName).toBe('A')
       expect(link).toHaveAttribute('href', href)
       expect(link).not.toHaveAttribute('target')
@@ -38,7 +38,7 @@ describe('Missing-page recovery', () => {
     await user.tab()
     expect(screen.getByRole('link', { name: 'Browse blog' })).toHaveFocus()
     await user.tab()
-    expect(screen.getByRole('link', { name: 'Home', exact: true })).toHaveFocus()
+    expect(screen.getByRole('link', { name: 'Home' })).toHaveFocus()
     await user.tab({ shift: true })
     expect(screen.getByRole('link', { name: 'Browse blog' })).toHaveFocus()
   })
