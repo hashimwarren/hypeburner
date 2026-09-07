@@ -7,6 +7,7 @@ import { config as loadDotenv } from 'dotenv'
 import { slug } from 'github-slugger'
 import readingTime from 'reading-time'
 import siteMetadata from '../data/siteMetadata.js'
+import normalizeSourcePath from '../lib/cms/source-path.js'
 
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 loadDotenv({ path: path.resolve(rootDir, '.env.local') })
@@ -31,13 +32,7 @@ function normalizeImages(value) {
   return value.map((item) => String(item || '').trim()).filter(Boolean)
 }
 
-function normalizeFilePath(value, slugValue) {
-  const raw = String(value || '').trim()
-  if (!raw) return `blog/${slugValue}.mdx`
-  return raw.replace(/^data\//, '')
-}
-
-function normalizePost(doc) {
+export function normalizePost(doc) {
   const slugValue = String(doc?.slug || '').trim()
   const title = String(doc?.title || '').trim()
   if (!slugValue || !title) return null
@@ -61,7 +56,7 @@ function normalizePost(doc) {
     readingTime: readingTime(sourceMarkdown || summary || title),
     slug: slugValue,
     path: `blog/${slugValue}`,
-    filePath: normalizeFilePath(doc?.legacySourcePath, slugValue),
+    filePath: normalizeSourcePath(doc?.legacySourcePath),
     toc: [],
     structuredData:
       structuredData ||
