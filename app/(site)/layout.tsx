@@ -82,8 +82,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Analytics analyticsConfig={siteMetadata.analytics as AnalyticsConfig} />
           <SectionContainer>
             <SearchProvider searchConfig={siteMetadata.search as SearchConfig}>
+              <a
+                href="#main-content"
+                className="sr-only bg-white text-black focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:rounded-sm focus:px-4 focus:py-2 dark:bg-gray-950 dark:text-white"
+              >
+                Skip to content
+              </a>
               <Header />
-              <main className="mb-auto">{children}</main>
+              <main id="main-content" tabIndex={-1} className="mb-auto">
+                {children}
+              </main>
             </SearchProvider>
             <Footer />
           </SectionContainer>
