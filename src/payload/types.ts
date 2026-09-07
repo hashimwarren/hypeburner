@@ -29,6 +29,7 @@ export type SitePost = {
   bibliography?: string
   canonicalUrl?: string
   content?: unknown
+  readingTimeMinutes?: number
   sourceMarkdown?: string
   legacySourcePath?: string
   structuredData?: Record<string, unknown>

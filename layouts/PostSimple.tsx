@@ -17,7 +17,7 @@ interface LayoutProps {
 }
 
 export default function PostLayout({ content, next, prev, children }: LayoutProps) {
-  const { path, slug, date, title } = content
+  const { path, slug, date, title, readingTimeMinutes } = content
 
   return (
     <SectionContainer>
@@ -26,13 +26,24 @@ export default function PostLayout({ content, next, prev, children }: LayoutProp
         <div>
           <header>
             <div className="space-y-1 border-b border-gray-200 pb-10 text-center dark:border-gray-700">
-              <dl>
+              <dl className="flex flex-wrap justify-center gap-x-3 gap-y-1">
                 <div>
                   <dt className="sr-only">Published on</dt>
                   <dd className="text-base leading-6 font-medium text-gray-500 dark:text-gray-400">
                     <time dateTime={date}>{formatDate(date, siteMetadata.locale)}</time>
                   </dd>
                 </div>
+                {readingTimeMinutes !== undefined && (
+                  <div>
+                    <dt className="sr-only">Estimated reading time</dt>
+                    <dd
+                      data-reading-time
+                      className="text-base leading-6 font-medium text-gray-500 dark:text-gray-400"
+                    >
+                      {readingTimeMinutes} min read
+                    </dd>
+                  </div>
+                )}
               </dl>
               <div>
                 <PageTitle>{title}</PageTitle>
