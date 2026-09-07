@@ -25,6 +25,7 @@ const ScrollTopAndComment = () => {
   }
   return (
     <div
+      data-article-scroll-controls
       className={`fixed right-[calc(1rem+env(safe-area-inset-right))] bottom-[calc(1rem+env(safe-area-inset-bottom))] z-20 flex-col gap-3 md:right-8 md:bottom-8 md:z-auto ${show ? 'flex' : 'hidden'}`}
     >
       {siteMetadata.comments?.provider && (

@@ -82,6 +82,21 @@
   }
 }
 
+/* Keep article text and its site footer clear of the mobile scroll control. */
+@media (width < 48rem) {
+  main:has([data-article-scroll-controls]) article {
+    padding-right: calc(2.25rem + env(safe-area-inset-right));
+  }
+
+  main:has([data-article-scroll-controls]) ~ footer[role='contentinfo'] {
+    padding-right: calc(3.25rem + env(safe-area-inset-right));
+  }
+
+  main:has([data-article-scroll-controls]) article .prose a {
+    overflow-wrap: anywhere;
+  }
+}
+
 @layer utilities {
   .prose {
     & a {

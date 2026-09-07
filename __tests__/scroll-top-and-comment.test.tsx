@@ -28,6 +28,7 @@ describe('ScrollTopAndComment', () => {
     expect(controls).not.toHaveClass(y > 50 ? 'hidden' : 'flex')
     expect(controls).not.toHaveClass('md:flex')
     expect(controls).not.toHaveClass('md:hidden')
+    expect(controls).toHaveAttribute('data-article-scroll-controls')
   })
 
   it('tracks the strict 50px threshold in both directions', () => {
