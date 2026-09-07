@@ -1,4 +1,5 @@
 import readingTime from 'reading-time'
+import normalizeSourcePath from './source-path'
 import siteMetadata from '@/data/siteMetadata'
 import type { CmsPost } from './types'
 
@@ -46,12 +47,6 @@ function escapeXml(value: unknown): string {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&apos;')
-}
-
-function cleanLegacyPath(value: unknown, slugValue: string): string {
-  const raw = String(value || '').trim()
-  if (!raw) return `blog/${slugValue}.mdx`
-  return raw.replace(/^data\//, '')
 }
 
 function toStringArray(value: unknown): string[] {
@@ -104,7 +99,7 @@ export function buildSearchDocuments(posts: CmsPost[]): SearchDocument[] {
       readingTime: readingTime(post.sourceMarkdown || post.summary || post.title),
       slug: post.slug,
       path: `blog/${post.slug}`,
-      filePath: cleanLegacyPath(post.legacySourcePath, post.slug),
+      filePath: normalizeSourcePath(post.legacySourcePath),
       toc: [],
       structuredData: post.structuredData || {
         '@context': 'https://schema.org',

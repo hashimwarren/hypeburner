@@ -186,7 +186,7 @@ test('public routes and a real published article retain successful responses', a
 }, testInfo) => {
   for (const path of ['/', '/blog', '/about', '/contact', '/projects', '/tags']) {
     expect((await page.goto(path))?.status(), path).toBe(200)
-    await expect(page.getByRole('main')).toBeVisible()
+    await expect(page.locator('main#main-content')).toBeVisible()
     await expect(page.locator('main h1')).toBeVisible()
     await expect(page.getByRole('heading', { name: '404', exact: true })).toHaveCount(0)
   }
@@ -239,10 +239,11 @@ for (const path of ['/cms', '/cms/login', '/cms/missing-recovery/nested']) {
 test('unknown API and unauthenticated current-user requests remain JSON endpoints', async ({
   request,
 }) => {
-  const missing = await request.get(`/api/missing-${randomUUID()}/nested`, { maxRedirects: 0 })
+  const missingPath = `/api/missing-${randomUUID()}/nested`
+  const missing = await request.get(missingPath, { maxRedirects: 0 })
   expect(missing.status()).toBe(404)
   expect(missing.headers()['content-type']).toContain('application/json')
-  expect(await missing.json()).toHaveProperty('errors')
+  expect(await missing.json()).toHaveProperty('message', `Route not found "${missingPath}"`)
   const me = await request.get('/api/users/me', { maxRedirects: 0 })
   expect(me.status()).toBe(200)
   expect(me.headers()['content-type']).toContain('application/json')
