@@ -45,6 +45,9 @@ jobs:
           PAYLOAD_SECRET: ${{ secrets.PAYLOAD_SECRET }}
         run: yarn build
 
+      - name: Typecheck project including test sources
+        run: yarn tsc --noEmit
+
       - name: Start Next.js app
         env:
           DATABASE_URI: ${{ secrets.DATABASE_URI }}

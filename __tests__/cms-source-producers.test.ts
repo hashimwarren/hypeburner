@@ -4,9 +4,13 @@ import { getPayload } from 'payload'
 import { getAllPosts, getPostBySlug } from '../lib/cms'
 import { buildSearchDocuments } from '../lib/cms/artifacts'
 
+const mockPayload = {
+  find: jest.fn(),
+} satisfies Pick<Awaited<ReturnType<typeof getPayload>>, 'find'>
+
 jest.mock('react', () => ({ cache: (fn: unknown) => fn }))
 jest.mock('github-slugger', () => ({ slug: (value: string) => value.toLowerCase() }))
-jest.mock('payload', () => ({ getPayload: jest.fn() }))
+jest.mock('payload', () => ({ getPayload: jest.fn(async () => mockPayload) }))
 jest.mock('../payload.config', () => ({ __esModule: true, default: {} }))
 jest.mock('../lib/env', () => ({
   env: {
@@ -58,11 +62,10 @@ function document(legacySourcePath: unknown) {
 }
 
 describe('CMS source-path producers', () => {
-  const find = jest.fn()
+  const { find } = mockPayload
 
   beforeEach(() => {
     jest.clearAllMocks()
-    jest.mocked(getPayload).mockResolvedValue({ find } as Awaited<ReturnType<typeof getPayload>>)
   })
 
   it.each(cases)(
