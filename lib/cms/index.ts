@@ -1,5 +1,6 @@
 import { cache } from 'react'
 import normalizeSourcePath from './source-path'
+import { getReadingTimeMinutes } from './reading-time'
 import { slug } from 'github-slugger'
 import { getPayload } from 'payload'
 import siteMetadata from '@/data/siteMetadata'
@@ -69,6 +70,7 @@ function normalizePost(value: Record<string, unknown>): SitePost {
   const images = Array.isArray(value.images) ? toStringArray(value.images) : []
   const authors = Array.isArray(value.authors) ? value.authors.map(normalizeAuthor) : []
   const tags = toStringArray(value.tags)
+  const summary = String(value.summary || '')
   const legacySourcePath = normalizeSourcePath(value.legacySourcePath) || undefined
 
   return {
@@ -77,7 +79,7 @@ function normalizePost(value: Record<string, unknown>): SitePost {
     path: `blog/${slugValue}`,
     filePath: legacySourcePath || '',
     title: String(value.title || slugValue),
-    summary: String(value.summary || ''),
+    summary,
     date: publishedAt || createdAt,
     lastmod: explicitLastMod || updatedAt || publishedAt || createdAt,
     tags,
@@ -87,6 +89,7 @@ function normalizePost(value: Record<string, unknown>): SitePost {
     bibliography: value.bibliography ? String(value.bibliography) : undefined,
     canonicalUrl: value.canonicalUrl ? String(value.canonicalUrl) : undefined,
     content: value.content,
+    readingTimeMinutes: getReadingTimeMinutes({ content: value.content, summary }),
     sourceMarkdown: value.sourceMarkdown ? String(value.sourceMarkdown) : undefined,
     legacySourcePath,
     structuredData:

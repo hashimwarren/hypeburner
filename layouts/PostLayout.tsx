@@ -33,7 +33,7 @@ interface LayoutProps {
 }
 
 export default function PostLayout({ content, authorDetails, next, prev, children }: LayoutProps) {
-  const { path, slug, date, title, tags } = content
+  const { path, slug, date, title, tags, readingTimeMinutes } = content
   const sourcePath = normalizeSourcePath(content.legacySourcePath)
   const basePath = path.split('/')[0]
 
@@ -44,7 +44,7 @@ export default function PostLayout({ content, authorDetails, next, prev, childre
         <div className="xl:divide-y xl:divide-gray-200 xl:dark:divide-gray-700">
           <header className="pt-6 xl:pb-6">
             <div className="space-y-1 text-center">
-              <dl className="space-y-10">
+              <dl className="flex flex-wrap justify-center gap-x-3 gap-y-1">
                 <div>
                   <dt className="sr-only">Published on</dt>
                   <dd className="text-base leading-6 font-medium text-gray-500 dark:text-gray-400">
@@ -53,6 +53,17 @@ export default function PostLayout({ content, authorDetails, next, prev, childre
                     </time>
                   </dd>
                 </div>
+                {readingTimeMinutes !== undefined && (
+                  <div>
+                    <dt className="sr-only">Estimated reading time</dt>
+                    <dd
+                      data-reading-time
+                      className="text-base leading-6 font-medium text-gray-500 dark:text-gray-400"
+                    >
+                      {readingTimeMinutes} min read
+                    </dd>
+                  </div>
+                )}
               </dl>
               <div>
                 <PageTitle>{title}</PageTitle>
