@@ -12,6 +12,14 @@ for (const theme of ['light', 'dark'] as const) {
       await page.setViewportSize({ width, height: 900 })
       await page.emulateMedia({ colorScheme: theme })
       await page.addInitScript((theme) => localStorage.setItem('theme', theme), theme)
+      const loadedScriptUrls = new Set<string>()
+      // Track completed requests, not script tags that this browser may never load (e.g. noModule).
+      page.on('requestfinished', (request) => {
+        const url = new URL(request.url())
+        if (url.pathname.startsWith('/_next/') && url.pathname.endsWith('.js')) {
+          loadedScriptUrls.add(request.url())
+        }
+      })
       const response = await page.goto(articlePath)
       expect(response?.status()).toBe(200)
       const article = page.locator('article')
@@ -95,18 +103,23 @@ for (const theme of ['light', 'dark'] as const) {
         const chartData = report.match(/window\.chartData = (.*);/)
         expect(chartData, 'CI must build with ANALYZE=true').not.toBeNull()
         const chunks: BundleNode[] = JSON.parse(chartData![1])
-        const loadedChunks = await page.evaluate(() =>
-          Array.from(
-            new Set([
-              ...Array.from(document.scripts, (script) => script.src),
-              ...performance.getEntriesByType('resource').map((entry) => entry.name),
-            ])
+        const loadedChunks = Array.from(
+          new Set(
+            Array.from(loadedScriptUrls, (url) =>
+              decodeURIComponent(new URL(url).pathname.slice('/_next/'.length))
+            )
           )
-            .filter((url) => url.includes('/_next/') && /\.js(?:\?|$)/.test(url))
-            .map((url) => new URL(url).pathname.split('/_next/')[1])
         )
-        expect(loadedChunks.length).toBeGreaterThan(0)
         const matched = chunks.filter((chunk) => loadedChunks.includes(chunk.label))
+        await testInfo.attach('article-client-chunk-accounting', {
+          body: JSON.stringify({
+            requestedUrls: [...loadedScriptUrls],
+            loadedChunks,
+            matchedChunks: matched.map((chunk) => chunk.label),
+          }),
+          contentType: 'application/json',
+        })
+        expect(loadedChunks.length).toBeGreaterThan(0)
         expect(matched.map((chunk) => chunk.label).sort()).toEqual([...loadedChunks].sort())
         const modules: string[] = []
         const visit = (node: BundleNode) => {
