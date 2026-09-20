@@ -7,3 +7,4 @@
 - Run postbuild in production mode to prevent Payload development schema synchronization during builds.
 - Retire the unused GitHub Pages workflow; checkout, webhooks, and Payload require a Next.js server deployment.
 - Update newsletter browser tests for the current homepage form and native email validation.
+- Show estimated reading time based on the rendered article text in all article layouts (#86).

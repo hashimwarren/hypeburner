@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react'
+import type { ReactNode } from 'react'
 import PostLayout from '@/layouts/PostLayout'
 import PostSimple from '@/layouts/PostSimple'
 import PostBanner from '@/layouts/PostBanner'
@@ -20,7 +21,7 @@ jest.mock('pliny/utils/formatDate', () => ({
 }))
 jest.mock('pliny/ui/Bleed', () => ({
   __esModule: true,
-  default: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  default: ({ children }: { children: ReactNode }) => <div>{children}</div>,
 }))
 
 const post: SitePost = {

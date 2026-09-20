@@ -89,7 +89,10 @@ function normalizePost(value: Record<string, unknown>): SitePost {
     bibliography: value.bibliography ? String(value.bibliography) : undefined,
     canonicalUrl: value.canonicalUrl ? String(value.canonicalUrl) : undefined,
     content: value.content,
-    readingTimeMinutes: getReadingTimeMinutes({ content: value.content, summary }),
+    readingTimeMinutes: getReadingTimeMinutes({
+      content: value.content,
+      summary: typeof value.summary === 'string' ? value.summary : undefined,
+    }),
     sourceMarkdown: value.sourceMarkdown ? String(value.sourceMarkdown) : undefined,
     legacySourcePath,
     structuredData:

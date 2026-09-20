@@ -45,6 +45,8 @@ const cases: [string, Record<string, unknown>, number | undefined][] = [
   ['missing body with Markdown only', { sourceMarkdown: words(601) }, undefined],
   ['title only', {}, undefined],
   ['whitespace summary', { summary: ' \n\t ' }, undefined],
+  ['object summary is unavailable', { summary: { text: 'word' } }, undefined],
+  ['numeric summary is unavailable', { summary: 123 }, undefined],
   [
     'empty rich text wins over stale fallback text',
     { content: richText(), summary: words(601), sourceMarkdown: words(601) },
