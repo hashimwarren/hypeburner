@@ -2,9 +2,10 @@ import { build, type Plugin } from 'esbuild'
 import { mkdtempSync, rmSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { basename, dirname, join, resolve } from 'node:path'
 
 export type FixtureLayout = 'PostSimple' | 'PostBanner'
+type FixtureShell = { htmlClassName: string; bodyClassName: string; language: string }
 export const fixtureArticlePath = `blog/日本語/${'nested-segment/'.repeat(16)}article%2Fpart`
 
 // Only unrelated routing, media, newsletter and external comments are replaced.
@@ -35,11 +36,21 @@ const fixtureAdapters: Plugin = {
 }
 
 export async function createCopyLayoutHarness() {
-  const directory = mkdtempSync(join(tmpdir(), 'hypeburner-copy-layouts-'))
+  const temporaryRoot = resolve(tmpdir())
+  const prefix = 'hypeburner-copy-layouts-'
+  const directory = mkdtempSync(join(temporaryRoot, prefix))
+  function dispose() {
+    const target = resolve(directory)
+    if (dirname(target) !== temporaryRoot || !basename(target).startsWith(prefix)) {
+      throw new Error('Refusing to remove a directory outside the generated fixture location')
+    }
+    rmSync(target, { recursive: true, force: true })
+  }
   const source = `
     import {useEffect} from 'react';
     import PostSimple from ${JSON.stringify(join(process.cwd(), 'layouts/PostSimple.tsx'))};
     import PostBanner from ${JSON.stringify(join(process.cwd(), 'layouts/PostBanner.tsx'))};
+    import SectionContainer from ${JSON.stringify(join(process.cwd(), 'components/SectionContainer.tsx'))};
     const post = {
       id: 'copy-fixture', slug: 'copy-fixture', path: ${JSON.stringify(fixtureArticlePath)},
       title: 'Article copy layout fixture', summary: 'Fixture summary', filePath: '',
@@ -49,10 +60,10 @@ export async function createCopyLayoutHarness() {
     function Fixture({layout}) {
       useEffect(() => { document.body.dataset.hydrated = 'true'; }, []);
       const Layout = layout === 'PostSimple' ? PostSimple : PostBanner;
-      return <Layout content={post} prev={{path:'blog/previous',title:'Previous article'}} next={{path:'blog/next',title:'Next article'}}>
+      return <SectionContainer><main id="main-content" tabIndex={-1} className="mb-auto"><Layout content={post} prev={{path:'blog/previous',title:'Previous article'}} next={{path:'blog/next',title:'Next article'}}>
         <p>Known fixture prose for the actual alternate article layout.</p>
         <div style={{height:900}} aria-hidden="true" />
-      </Layout>;
+      </Layout></main></SectionContainer>;
     }
   `
   const options = {
@@ -91,21 +102,28 @@ export async function createCopyLayoutHarness() {
     const require = createRequire(join(process.cwd(), 'package.json'))
     const server: { render: (layout: FixtureLayout) => string } = require(serverFile)
     return {
-      html(layout: FixtureLayout, theme: 'light' | 'dark', stylesheetUrls: string[]) {
+      html(
+        layout: FixtureLayout,
+        theme: 'light' | 'dark',
+        stylesheetUrls: string[],
+        shell: FixtureShell
+      ) {
+        const escapeAttribute = (value: string) =>
+          value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;')
+        const htmlClassName = shell.htmlClassName
+          .split(/\s+/)
+          .filter((name) => name && name !== 'light' && name !== 'dark')
+          .concat(theme)
+          .join(' ')
         const styles = stylesheetUrls
-          .map(
-            (url) =>
-              `<link rel="stylesheet" href="${url.replace(/&/g, '&amp;').replace(/"/g, '&quot;')}">`
-          )
+          .map((url) => `<link rel="stylesheet" href="${escapeAttribute(url)}">`)
           .join('')
-        return `<!doctype html><html class="${theme}"><head><meta name="viewport" content="width=device-width, initial-scale=1">${styles}</head><body data-layout="${layout}" class="bg-white text-gray-900 dark:bg-gray-950 dark:text-gray-100"><main id="fixture-root">${server.render(layout)}</main><script>${client.outputFiles[0].text.replace(/<\/script/gi, '<\\/script')}</script></body></html>`
+        return `<!doctype html><html lang="${escapeAttribute(shell.language)}" class="${escapeAttribute(htmlClassName)}"><head><meta name="viewport" content="width=device-width, initial-scale=1">${styles}</head><body data-layout="${layout}" class="${escapeAttribute(shell.bodyClassName)}"><div id="fixture-root">${server.render(layout)}</div><script>${client.outputFiles[0].text.replace(/<\/script/gi, '<\\/script')}</script></body></html>`
       },
-      dispose() {
-        rmSync(directory, { recursive: true, force: true })
-      },
+      dispose,
     }
   } catch (error) {
-    rmSync(directory, { recursive: true, force: true })
+    dispose()
     throw error
   }
 }

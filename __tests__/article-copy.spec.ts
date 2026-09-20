@@ -120,7 +120,22 @@ for (const theme of ['light', 'dark'] as const) {
         test(`${layout} fixture wraps long URLs with production CSS and real hydration`, async ({
           page,
         }, testInfo) => {
+          await page.addInitScript((theme) => localStorage.setItem('theme', theme), theme)
           await openArticle(page)
+          const liveShell = await page.evaluate(() => {
+            const main = document.querySelector('main')!
+            const article = main.querySelector('article')!
+            const style = getComputedStyle(article)
+            return {
+              htmlClassName: document.documentElement.className,
+              bodyClassName: document.body.className,
+              language: document.documentElement.lang,
+              mainWidth: main.getBoundingClientRect().width,
+              articleWidth: article.getBoundingClientRect().width,
+              fontFamily: style.fontFamily,
+              fontSize: style.fontSize,
+            }
+          })
           const stylesheets = await page
             .locator('link[rel="stylesheet"]')
             .evaluateAll((links) =>
@@ -137,13 +152,24 @@ for (const theme of ['light', 'dark'] as const) {
           await page.route(`**${fixtureUrl}`, (route) =>
             route.fulfill({
               contentType: 'text/html',
-              body: harness.html(layout, theme, stylesheets),
+              body: harness.html(layout, theme, stylesheets, liveShell),
             })
           )
           const response = await page.goto(fixtureUrl)
           expect(response?.status()).toBe(200)
           await expect(page.locator('body')).toHaveAttribute('data-hydrated', 'true')
           await page.evaluate(() => document.fonts.ready)
+          await expect(page.locator('html')).toHaveClass(new RegExp(`\\b${theme}\\b`))
+          const fixtureShell = await page.locator('article').evaluate((article) => ({
+            mainWidth: article.closest('main')!.getBoundingClientRect().width,
+            articleWidth: article.getBoundingClientRect().width,
+            fontFamily: getComputedStyle(article).fontFamily,
+            fontSize: getComputedStyle(article).fontSize,
+          }))
+          expect(fixtureShell.mainWidth).toBeCloseTo(liveShell.mainWidth, 1)
+          expect(fixtureShell.articleWidth).toBeCloseTo(liveShell.articleWidth, 1)
+          expect(fixtureShell.fontFamily).toBe(liveShell.fontFamily)
+          expect(fixtureShell.fontSize).toBe(liveShell.fontSize)
           const button = page.getByRole('button', { name: 'Copy article link', exact: true })
           await expect(button).toHaveCount(1)
           const group = button.locator('..')
@@ -198,6 +224,8 @@ for (const theme of ['light', 'dark'] as const) {
               width,
               theme,
               stylesheetUrls: stylesheets,
+              liveShell,
+              fixtureShell,
               expectedUrl,
               buttonGeometry,
               fallbackGeometry,
