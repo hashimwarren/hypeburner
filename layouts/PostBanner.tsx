@@ -18,7 +18,7 @@ interface LayoutProps {
 }
 
 export default function PostMinimal({ content, next, prev, children }: LayoutProps) {
-  const { slug, title, images } = content
+  const { slug, title, images, readingTimeMinutes } = content
   const displayImage =
     images && images.length > 0 ? images[0] : 'https://picsum.photos/seed/picsum/800/400'
 
@@ -37,6 +37,15 @@ export default function PostMinimal({ content, next, prev, children }: LayoutPro
             </div>
             <div className="relative pt-10">
               <PageTitle>{title}</PageTitle>
+              {readingTimeMinutes !== undefined && (
+                <p
+                  data-reading-time
+                  aria-label={`Estimated reading time: ${readingTimeMinutes} ${readingTimeMinutes === 1 ? 'minute' : 'minutes'}`}
+                  className="text-base leading-6 font-medium text-gray-500 dark:text-gray-400"
+                >
+                  {readingTimeMinutes} min read
+                </p>
+              )}
               <PostSubscribeBox />
             </div>
           </div>
