@@ -8,8 +8,10 @@ import Tag from '@/components/Tag'
 import siteMetadata from '@/data/siteMetadata'
 import ScrollTopAndComment from '@/components/ScrollTopAndComment'
 import PostSubscribeBox from '@/components/PostSubscribeBox'
+import CopyArticleLink from '@/components/CopyArticleLink'
 import type { SiteAuthor, SitePost, SitePostLink } from 'src/payload/types'
 
+import { articleUrl } from '../lib/articleUrl'
 import normalizeSourcePath from '../lib/cms/source-path'
 
 const editUrl = (path: string) =>
@@ -123,6 +125,9 @@ export default function PostLayout({ content, authorDetails, next, prev, childre
                     <Link href={editUrl(sourcePath)}>View on GitHub</Link>
                   </>
                 )}
+              </div>
+              <div className="py-6">
+                <CopyArticleLink url={articleUrl(siteMetadata.siteUrl, path)} />
               </div>
               {siteMetadata.comments && (
                 <div

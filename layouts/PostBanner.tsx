@@ -8,7 +8,9 @@ import SectionContainer from '@/components/SectionContainer'
 import siteMetadata from '@/data/siteMetadata'
 import ScrollTopAndComment from '@/components/ScrollTopAndComment'
 import PostSubscribeBox from '@/components/PostSubscribeBox'
+import CopyArticleLink from '@/components/CopyArticleLink'
 import type { SitePost, SitePostLink } from 'src/payload/types'
+import { articleUrl } from '../lib/articleUrl'
 
 interface LayoutProps {
   content: SitePost
@@ -18,7 +20,7 @@ interface LayoutProps {
 }
 
 export default function PostMinimal({ content, next, prev, children }: LayoutProps) {
-  const { slug, title, images, readingTimeMinutes } = content
+  const { path, slug, title, images, readingTimeMinutes } = content
   const displayImage =
     images && images.length > 0 ? images[0] : 'https://picsum.photos/seed/picsum/800/400'
 
@@ -50,6 +52,9 @@ export default function PostMinimal({ content, next, prev, children }: LayoutPro
             </div>
           </div>
           <div className="prose dark:prose-invert max-w-none py-4">{children}</div>
+          <div className="py-6">
+            <CopyArticleLink url={articleUrl(siteMetadata.siteUrl, path)} />
+          </div>
           {siteMetadata.comments && (
             <div className="pt-6 pb-6 text-center text-gray-700 dark:text-gray-300" id="comment">
               <Comments slug={slug} />
