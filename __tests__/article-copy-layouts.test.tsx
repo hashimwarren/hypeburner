@@ -28,8 +28,11 @@ jest.mock('pliny/ui/Bleed', () => ({
   default: ({ children }: { children: ReactNode }) => <div>{children}</div>,
 }))
 
-const path = `blog/日本語/${'nested/'.repeat(12)}article%2Fpart?tracking=yes#section`
-const canonical = `${new URL(siteMetadata.siteUrl).origin}/${path.split('?')[0]}`
+const path = `blog/日本語/${'nested/'.repeat(12)}article?part#section%2Fraw`
+const canonical = `${new URL(siteMetadata.siteUrl).origin}/blog/%E6%97%A5%E6%9C%AC%E8%AA%9E/${'nested/'.repeat(12)}article%3Fpart%23section%252Fraw`
+const originalBasePath = process.env.BASE_PATH
+const originalSiteUrl = siteMetadata.siteUrl
+const originalLocation = window.location.href
 const post: SitePost = {
   id: 'copy-layout',
   slug: 'copy-layout',
@@ -54,16 +57,54 @@ let originalClipboard: PropertyDescriptor | undefined
 
 beforeEach(() => {
   originalClipboard = Object.getOwnPropertyDescriptor(navigator, 'clipboard')
+  delete process.env.BASE_PATH
 })
 
 afterEach(() => {
   cleanup()
   if (originalClipboard) Object.defineProperty(navigator, 'clipboard', originalClipboard)
   else Reflect.deleteProperty(navigator, 'clipboard')
+  if (originalBasePath === undefined) delete process.env.BASE_PATH
+  else process.env.BASE_PATH = originalBasePath
+  siteMetadata.siteUrl = originalSiteUrl
+  window.history.replaceState(null, '', originalLocation)
 })
 
 for (const { name, Layout } of layouts) {
   describe(name, () => {
+    it.each([
+      ['https://hypeburner.com', '/notes', '/notes'],
+      ['https://hypeburner.com/notes/', undefined, '/notes'],
+      ['https://hypeburner.com/notes/', '/notes', '/notes'],
+      ['https://hypeburner.com/notes/', '/other', '/other'],
+      ['https://hypeburner.com/notes/', '', '/notes'],
+    ])(
+      'copies a raw CMS slug under site %s and BASE_PATH %s',
+      async (siteUrl, basePath, prefix) => {
+        siteMetadata.siteUrl = siteUrl
+        if (basePath !== undefined) process.env.BASE_PATH = basePath
+        window.history.replaceState(null, '', '/preview?tracking=yes#browser-fragment')
+        const user = userEvent.setup()
+        const writeText = jest
+          .fn<ReturnType<Clipboard['writeText']>, Parameters<Clipboard['writeText']>>()
+          .mockResolvedValue(undefined)
+        Object.defineProperty(navigator, 'clipboard', {
+          configurable: true,
+          value: { writeText } satisfies Pick<Clipboard, 'writeText'>,
+        })
+        render(
+          <Layout content={{ ...post, path: 'blog/article?part#section%raw' }} authorDetails={[]}>
+            <p>Article body</p>
+          </Layout>
+        )
+        await user.click(screen.getByRole('button', { name: 'Copy article link' }))
+        expect(writeText).toHaveBeenCalledWith(
+          `https://hypeburner.com${prefix}/blog/article%3Fpart%23section%25raw`
+        )
+        expect(screen.getByRole('status')).toHaveTextContent('Article link copied.')
+      }
+    )
+
     it.each([false, true])(
       'copies the canonical URL and supports keyboard fallback with adjacent articles: %p',
       async (withNavigation) => {

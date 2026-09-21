@@ -2,7 +2,7 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import CopyArticleLink from '@/components/CopyArticleLink'
 
-const url = 'https://hypeburner.com/blog/日本語/nested/a%2Fb%3Fc%23d'
+const url = 'https://hypeburner.com/notes/blog/%E6%97%A5%E6%9C%AC%E8%AA%9E/nested/a%252Fb%3Fc%23d'
 const buttonName = 'Copy article link'
 
 function writeMock() {

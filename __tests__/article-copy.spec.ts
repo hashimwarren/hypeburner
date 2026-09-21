@@ -3,8 +3,11 @@ import siteMetadata from '../data/siteMetadata'
 import { createCopyLayoutHarness, fixtureArticlePath } from './fixtures/article-copy-harness'
 
 const articlePath = '/blog/2026-05-25'
-const canonicalUrl = `${new URL(siteMetadata.siteUrl).origin}${articlePath}`
-const browsingPath = `${articlePath}?utm_source=copy-test#copy-test`
+const publicSite = new URL(siteMetadata.siteUrl)
+const deploymentPrefix = (process.env.BASE_PATH || publicSite.pathname).replace(/^\/+|\/+$/g, '')
+const canonicalPrefix = `${publicSite.origin}/${deploymentPrefix ? `${deploymentPrefix}/` : ''}`
+const canonicalUrl = `${canonicalPrefix}${articlePath.slice(1)}`
+const browsingPath = `${process.env.BASE_PATH || ''}${articlePath}?utm_source=copy-test#copy-test`
 type ClipboardMode = 'success' | 'rejected' | 'unavailable' | 'missing-method' | 'throws'
 let fixtureHarness: ReturnType<typeof createCopyLayoutHarness> | undefined
 
@@ -151,12 +154,13 @@ for (const theme of ['light', 'dark'] as const) {
           page.on('pageerror', (error) => errors.push(error.message))
           await page.route(`**${fixtureUrl}`, (route) =>
             route.fulfill({
-              contentType: 'text/html',
+              contentType: 'text/html; charset=utf-8',
               body: harness.html(layout, theme, stylesheets, liveShell),
             })
           )
           const response = await page.goto(fixtureUrl)
           expect(response?.status()).toBe(200)
+          expect(await page.evaluate(() => document.characterSet)).toBe('UTF-8')
           await expect(page.locator('body')).toHaveAttribute('data-hydrated', 'true')
           await page.evaluate(() => document.fonts.ready)
           await expect(page.locator('html')).toHaveClass(new RegExp(`\\b${theme}\\b`))
@@ -174,7 +178,7 @@ for (const theme of ['light', 'dark'] as const) {
           await expect(button).toHaveCount(1)
           const group = button.locator('..')
           const status = group.getByRole('status')
-          const expectedUrl = `${new URL(siteMetadata.siteUrl).origin}/${fixtureArticlePath}`
+          const expectedUrl = `${canonicalPrefix}${fixtureArticlePath.split('/').map(encodeURIComponent).join('/')}`
           await simulateClipboard(page, 'success')
           const buttonGeometry = await geometry(button)
           expectUsable(buttonGeometry)

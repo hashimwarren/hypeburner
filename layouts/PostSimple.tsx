@@ -58,7 +58,9 @@ export default function PostLayout({ content, next, prev, children }: LayoutProp
               <div className="prose dark:prose-invert max-w-none pt-10 pb-8">{children}</div>
             </div>
             <div className="py-6">
-              <CopyArticleLink url={articleUrl(siteMetadata.siteUrl, path)} />
+              <CopyArticleLink
+                url={articleUrl(siteMetadata.siteUrl, path, process.env.BASE_PATH)}
+              />
             </div>
             {siteMetadata.comments && (
               <div className="pt-6 pb-6 text-center text-gray-700 dark:text-gray-300" id="comment">

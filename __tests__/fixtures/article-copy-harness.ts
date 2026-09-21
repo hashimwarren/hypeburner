@@ -6,7 +6,7 @@ import { basename, dirname, join, resolve } from 'node:path'
 
 export type FixtureLayout = 'PostSimple' | 'PostBanner'
 type FixtureShell = { htmlClassName: string; bodyClassName: string; language: string }
-export const fixtureArticlePath = `blog/日本語/${'nested-segment/'.repeat(16)}article%2Fpart`
+export const fixtureArticlePath = `blog/日本語/${'nested-segment/'.repeat(16)}article?part#section%raw`
 
 // Only unrelated routing, media, newsletter and external comments are replaced.
 // Both actual layouts, canonical URL helper, CopyArticleLink and scroll controls are bundled intact.
@@ -70,7 +70,11 @@ export async function createCopyLayoutHarness() {
     bundle: true,
     jsx: 'automatic' as const,
     plugins: [fixtureAdapters],
-    define: { 'process.env.NODE_ENV': '"production"', 'process.env': '{}' },
+    define: {
+      'process.env.NODE_ENV': '"production"',
+      'process.env.BASE_PATH': JSON.stringify(process.env.BASE_PATH || ''),
+      'process.env': '{}',
+    },
     logLevel: 'silent' as const,
   }
   const serverFile = join(directory, 'server.cjs')
@@ -118,7 +122,7 @@ export async function createCopyLayoutHarness() {
         const styles = stylesheetUrls
           .map((url) => `<link rel="stylesheet" href="${escapeAttribute(url)}">`)
           .join('')
-        return `<!doctype html><html lang="${escapeAttribute(shell.language)}" class="${escapeAttribute(htmlClassName)}"><head><meta name="viewport" content="width=device-width, initial-scale=1">${styles}</head><body data-layout="${layout}" class="${escapeAttribute(shell.bodyClassName)}"><div id="fixture-root">${server.render(layout)}</div><script>${client.outputFiles[0].text.replace(/<\/script/gi, '<\\/script')}</script></body></html>`
+        return `<!doctype html><html lang="${escapeAttribute(shell.language)}" class="${escapeAttribute(htmlClassName)}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">${styles}</head><body data-layout="${layout}" class="${escapeAttribute(shell.bodyClassName)}"><div id="fixture-root">${server.render(layout)}</div><script>${client.outputFiles[0].text.replace(/<\/script/gi, '<\\/script')}</script></body></html>`
       },
       dispose,
     }

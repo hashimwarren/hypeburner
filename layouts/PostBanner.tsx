@@ -53,7 +53,7 @@ export default function PostMinimal({ content, next, prev, children }: LayoutPro
           </div>
           <div className="prose dark:prose-invert max-w-none py-4">{children}</div>
           <div className="py-6">
-            <CopyArticleLink url={articleUrl(siteMetadata.siteUrl, path)} />
+            <CopyArticleLink url={articleUrl(siteMetadata.siteUrl, path, process.env.BASE_PATH)} />
           </div>
           {siteMetadata.comments && (
             <div className="pt-6 pb-6 text-center text-gray-700 dark:text-gray-300" id="comment">

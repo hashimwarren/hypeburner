@@ -127,7 +127,9 @@ export default function PostLayout({ content, authorDetails, next, prev, childre
                 )}
               </div>
               <div className="py-6">
-                <CopyArticleLink url={articleUrl(siteMetadata.siteUrl, path)} />
+                <CopyArticleLink
+                  url={articleUrl(siteMetadata.siteUrl, path, process.env.BASE_PATH)}
+                />
               </div>
               {siteMetadata.comments && (
                 <div
