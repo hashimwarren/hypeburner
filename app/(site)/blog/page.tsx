@@ -1,6 +1,7 @@
 import { genPageMetadata } from 'app/seo'
 import ListLayout from '@/layouts/ListLayoutWithTags'
 import { getAllPosts, getTagCounts } from 'lib/cms'
+import { toPostSummary } from 'lib/cms/post-summary'
 
 const POSTS_PER_PAGE = 5
 
@@ -12,7 +13,7 @@ export default async function BlogPage(props: { searchParams: Promise<{ page: st
   const [posts, tagCounts] = await Promise.all([getAllPosts(), getTagCounts()])
   const pageNumber = 1
   const totalPages = Math.ceil(posts.length / POSTS_PER_PAGE)
-  const initialDisplayPosts = posts.slice(0, POSTS_PER_PAGE * pageNumber)
+  const displayPosts = posts.slice(0, POSTS_PER_PAGE * pageNumber).map(toPostSummary)
   const pagination = {
     currentPage: pageNumber,
     totalPages: totalPages,
@@ -20,8 +21,7 @@ export default async function BlogPage(props: { searchParams: Promise<{ page: st
 
   return (
     <ListLayout
-      posts={posts}
-      initialDisplayPosts={initialDisplayPosts}
+      posts={displayPosts}
       pagination={pagination}
       tagCounts={tagCounts}
       title="All Posts"
