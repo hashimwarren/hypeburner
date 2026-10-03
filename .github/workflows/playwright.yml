@@ -34,7 +34,7 @@ jobs:
         run: yarn install
 
       - name: Run pilot regression unit tests (forced exit; open handles reported)
-        run: yarn jest --runTestsByPath __tests__/footer.test.tsx __tests__/cms-artifacts.test.ts __tests__/cms-source-path.test.ts __tests__/cms-source-producers.test.ts __tests__/post-layout.test.tsx __tests__/scroll-top-and-comment.test.tsx __tests__/cms-reading-time.test.ts __tests__/cms-normalization.test.ts __tests__/article-reading-time.test.tsx __tests__/not-found.test.tsx __tests__/article-url.test.ts __tests__/copy-article-link.test.tsx __tests__/article-copy-layouts.test.tsx --ci --runInBand --detectOpenHandles --forceExit
+        run: yarn jest --runTestsByPath __tests__/footer.test.tsx __tests__/cms-artifacts.test.ts __tests__/cms-source-path.test.ts __tests__/cms-source-producers.test.ts __tests__/post-layout.test.tsx __tests__/scroll-top-and-comment.test.tsx __tests__/cms-reading-time.test.ts __tests__/cms-normalization.test.ts __tests__/article-reading-time.test.tsx __tests__/not-found.test.tsx __tests__/article-url.test.ts __tests__/copy-article-link.test.tsx __tests__/article-copy-layouts.test.tsx __tests__/archive-payloads.test.tsx --ci --runInBand --detectOpenHandles --forceExit
 
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
