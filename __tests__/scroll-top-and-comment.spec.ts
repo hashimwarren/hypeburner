@@ -3,10 +3,10 @@ import { expect, test, type Locator } from '@playwright/test'
 
 const articlePath = '/blog/2026-05-25'
 
-async function measureClearance(top: Locator, mobile: boolean) {
-  return top.evaluate((button, mobile) => {
+async function measureClearance(control: Locator, reservedGutter: boolean) {
+  return control.evaluate((button, reservedGutter) => {
     const bounds = button.getBoundingClientRect()
-    const gap = mobile ? 8 : 0
+    const gap = reservedGutter ? 8 : 0
     const intersects = (rect: DOMRect) =>
       rect.width > 0 &&
       rect.height > 0 &&
@@ -42,6 +42,7 @@ async function measureClearance(top: Locator, mobile: boolean) {
       }
     }
     return {
+      control: button.getAttribute('aria-label'),
       scrollY,
       button: bounds.toJSON(),
       controlBounds,
@@ -52,11 +53,11 @@ async function measureClearance(top: Locator, mobile: boolean) {
         document.elementFromPoint(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2)
       ),
     }
-  }, mobile)
+  }, reservedGutter)
 }
 
 for (const theme of ['light', 'dark'] as const) {
-  for (const width of [320, 375, 767, 768, 1280]) {
+  for (const width of [320, 375, 767, 768, 800, 1023, 1024, 1280]) {
     test(`article scroll controls at ${width}px in ${theme} mode`, async ({ page }, testInfo) => {
       test.setTimeout(90_000)
       await page.setViewportSize({ width, height: 900 })
@@ -95,11 +96,11 @@ for (const theme of ['light', 'dark'] as const) {
         await expect(marker).toHaveCount(1)
         await expect(page.locator('article')).toHaveCSS(
           'padding-right',
-          width < 768 ? '36px' : '0px'
+          width < 1024 ? '36px' : '0px'
         )
         await expect(page.getByRole('contentinfo')).toHaveCSS(
           'padding-right',
-          width < 768 ? '52px' : '0px'
+          width < 1024 ? '52px' : '0px'
         )
       }
       if (width < 768) await expect(comment).toBeHidden()
@@ -285,7 +286,10 @@ for (const theme of ['light', 'dark'] as const) {
         await email.fill('')
       }
 
-      // Inspect actual text/control rectangles, not just page-bottom padding.
+      // Inspect both floating buttons against actual text/control rectangles,
+      // not just page-bottom padding. Comment controls appear at md (768px),
+      // but the page needs the reserved gutter until lg (1024px).
+      const floatingControls = width < 768 ? [top] : [top, comment]
       const regions = [
         { name: 'article-header', locator: page.locator('article header') },
         { name: 'article-body', locator: page.locator('article .prose') },
@@ -302,22 +306,28 @@ for (const theme of ['light', 'dark'] as const) {
         )
         await expect(top).toBeVisible()
         await top.click({ trial: true })
-        const clearance = await measureClearance(top, width < 768)
+        const clearances = await Promise.all(
+          floatingControls.map((control) => measureClearance(control, width < 1024))
+        )
         await testInfo.attach(`clearance-${selector}`, {
-          body: JSON.stringify(clearance, null, 2),
+          body: JSON.stringify(clearances, null, 2),
           contentType: 'application/json',
         })
         await testInfo.attach(`position-${selector}`, {
           body: await page.screenshot(),
           contentType: 'image/png',
         })
-        expect.soft(clearance.overflow, selector).toBe(false)
-        expect.soft(clearance.collisions, selector).toEqual([])
-        expect.soft(clearance.receivesPointer, selector).toBe(true)
+        for (const clearance of clearances) {
+          const context = `${selector}: ${clearance.control}`
+          expect.soft(clearance.overflow, context).toBe(false)
+          expect.soft(clearance.collisions, context).toEqual([])
+          expect.soft(clearance.receivesPointer, context).toBe(true)
+        }
       }
 
-      if (width < 768) {
-        // 32px intervals overlap the 44px target's band, covering every paragraph through the footer.
+      if (width < 1024) {
+        // 32px intervals overlap both the 44px mobile and 36px tablet targets,
+        // covering every paragraph through the footer at each narrow viewport.
         const maximum = await page.evaluate(
           () => document.documentElement.scrollHeight - innerHeight
         )
@@ -327,9 +337,11 @@ for (const theme of ['light', 'dark'] as const) {
         for (const y of [...positions].sort((a, b) => a - b)) {
           await page.evaluate((y) => window.scrollTo({ top: y, behavior: 'instant' }), y)
           await expect(top).toBeVisible()
-          const clearance = await measureClearance(top, true)
-          if (clearance.overflow || clearance.collisions.length || !clearance.receivesPointer)
-            failures.push(clearance)
+          for (const control of floatingControls) {
+            const clearance = await measureClearance(control, true)
+            if (clearance.overflow || clearance.collisions.length || !clearance.receivesPointer)
+              failures.push(clearance)
+          }
           if (y === 712 || y === maximum) {
             await testInfo.attach(`sweep-${y}`, {
               body: await page.screenshot(),
@@ -337,14 +349,14 @@ for (const theme of ['light', 'dark'] as const) {
             })
           }
         }
-        await testInfo.attach('complete-mobile-sweep', {
+        await testInfo.attach('complete-mobile-tablet-sweep', {
           body: JSON.stringify({ maximum, samples: positions.size, failures }, null, 2),
           contentType: 'application/json',
         })
         expect(failures).toEqual([])
       }
 
-      if ((width === 320 || width === 1280) && theme === 'light') {
+      if ([320, 800, 1280].includes(width) && theme === 'light') {
         for (const path of ['/', '/blog']) {
           await page.goto(path)
           await expect(page.locator('[data-article-scroll-controls]')).toHaveCount(0)

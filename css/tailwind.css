@@ -82,8 +82,9 @@
   }
 }
 
-/* Keep article text and its site footer clear of the mobile scroll control. */
-@media (width < 48rem) {
+/* Keep article text and its site footer clear of the mobile and tablet scroll controls.
+   At lg, the centered page has enough outer margin for the fixed controls. */
+@media (width < 64rem) {
   main:has([data-article-scroll-controls]) article {
     padding-right: calc(2.25rem + env(safe-area-inset-right));
   }
