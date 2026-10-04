@@ -40,3 +40,5 @@ export type SitePostLink = {
   path: string
   title: string
 }
+
+export type SitePostSummary = Pick<SitePost, 'path' | 'date' | 'title' | 'summary' | 'tags'>

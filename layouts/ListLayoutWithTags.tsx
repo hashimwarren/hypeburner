@@ -6,16 +6,15 @@ import { formatDate } from 'pliny/utils/formatDate'
 import Link from '@/components/Link'
 import Tag from '@/components/Tag'
 import siteMetadata from '@/data/siteMetadata'
-import type { SitePost } from 'src/payload/types'
+import type { SitePostSummary } from 'src/payload/types'
 
 interface PaginationProps {
   totalPages: number
   currentPage: number
 }
 interface ListLayoutProps {
-  posts: SitePost[]
+  posts: SitePostSummary[]
   title: string
-  initialDisplayPosts?: SitePost[]
   pagination?: PaginationProps
   tagCounts?: Record<string, number>
 }
@@ -68,15 +67,12 @@ function Pagination({ totalPages, currentPage }: PaginationProps) {
 export default function ListLayoutWithTags({
   posts,
   title,
-  initialDisplayPosts = [],
   pagination,
   tagCounts = {},
 }: ListLayoutProps) {
   const pathname = usePathname()
   const tagKeys = Object.keys(tagCounts)
   const sortedTags = tagKeys.sort((a, b) => tagCounts[b] - tagCounts[a])
-
-  const displayPosts = initialDisplayPosts.length > 0 ? initialDisplayPosts : posts
 
   return (
     <>
@@ -124,7 +120,7 @@ export default function ListLayoutWithTags({
           </div>
           <div>
             <ul>
-              {displayPosts.map((post) => {
+              {posts.map((post) => {
                 const { path, date, title, summary, tags } = post
                 return (
                   <li key={path} className="py-5">
