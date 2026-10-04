@@ -17,6 +17,7 @@ type NewsletterFormProps = {
   formClassName?: string
   inputClassName?: string
   buttonClassName?: string
+  buttonLabel?: string
   buttonVariant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link'
   buttonSize?: 'default' | 'sm' | 'lg' | 'icon'
   statusClassName?: string
@@ -47,6 +48,7 @@ export default function NewsletterForm({
   formClassName,
   inputClassName,
   buttonClassName,
+  buttonLabel = 'Subscribe',
   buttonVariant = 'default',
   buttonSize = 'default',
   statusClassName,
@@ -154,7 +156,7 @@ export default function NewsletterForm({
           size={buttonSize}
           className={buttonClassName}
         >
-          {state === 'submitting' ? 'Subscribing...' : 'Subscribe'}
+          {state === 'submitting' ? 'Subscribing...' : buttonLabel}
         </Button>
       </form>
 
