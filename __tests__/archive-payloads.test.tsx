@@ -237,7 +237,7 @@ describe('archive client payloads', () => {
     )
   })
 
-  it('retains all static page paths and hourly revalidation', async () => {
+  it('retains all static page paths and daily revalidation', async () => {
     expect(await BlogPage.generateStaticParams()).toEqual([
       { page: '1' },
       { page: '2' },
@@ -252,7 +252,7 @@ describe('archive client payloads', () => {
     ])
     for (const route of [Blog, BlogPage, Tag, TagPage]) {
       expect(route.dynamic).toBe('force-static')
-      expect(route.revalidate).toBe(3600)
+      expect(route.revalidate).toBe(86400)
     }
     expect(Blog.metadata.title).toBe('Blog')
     expect(
